@@ -2,6 +2,7 @@
 layout: post
 title: Erlang NIF with timeslice reductions
 tags: C Elixir Erlang
+hash: post-2016-02-06-1af8d5a
 ---
 
 Recently, I put together an Erlang asynchronous port driver named [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) which implements the [SHA-3](https://en.wikipedia.org/wiki/SHA-3) algorithms used in another one of my projects, [jose](https://github.com/potatosalad/erlang-jose).
@@ -20,7 +21,8 @@ Having accomplished my goal, I decided to run a simple benchmark against the equ
 
 The results were not terribly impressive:
 
-<div id="chart1">
+<div id="{{ page.hash}}-chart1">
+  <img src="{{ site.url }}/assets/{{ page.hash }}/chart1.svg" style="width:100%;height:100%;">
   <svg height="300"></svg>
 </div>
 
@@ -39,7 +41,8 @@ After experimenting with the two options, I decided to use [`enif_consume_timesl
 
 I rewrote the port driver as a NIF and released it as version [2.0.0 of keccakf1600](https://github.com/potatosalad/erlang-keccakf1600/tree/2.0.0) and ran the same benchmark again:
 
-<div id="chart2">
+<div id="{{ page.hash}}-chart2">
+  <img src="{{ site.url }}/assets/{{ page.hash }}/chart2.svg" style="width:100%;height:100%;">
   <svg height="300"></svg>
 </div>
 
@@ -47,143 +50,166 @@ These results are much more consistent and closer to my original expectations.  
 
 <script>
 (function() {
-  var seriesData1 = [
-    {
-      key: "SHA2",
-      values: [
-        {
-          label: "SHA2/3-224",
-          value: 2.186853
-        },
-        {
-          label: "SHA2/3-256",
-          value: 2.183836
-        },
-        {
-          label: "SHA2/3-384",
-          value: 2.190898
-        },
-        {
-          label: "SHA2/3-512",
-          value: 2.200743
-        }
-      ]
-    },
-    {
-      key: "SHA3",
-      values: [
-        {
-          label: "SHA2/3-224",
-          value: 14.37063
-        },
-        {
-          label: "SHA2/3-256",
-          value: 11.97354
-        },
-        {
-          label: "SHA2/3-384",
-          value: 12.42217
-        },
-        {
-          label: "SHA2/3-512",
-          value: 11.8663
-        },
-        {
-          label: "SHAKE128",
-          value: 12.38027
-        },
-        {
-          label: "SHAKE256",
-          value: 12.96572
-        }
-      ]
+  var nvd3Supported = false;
+  if (typeof window.nv !== 'undefined' && typeof window.d3 !== 'undefined') {
+    nvd3Supported = true;
+  }
+  if (!nvd3Supported) {
+    var chart1Image = document.querySelector('#{{ page.hash}}-chart1 > img');
+    if (chart1Image !== null && chart1Image.style !== null) {
+      chart1Image.style.display = 'none';
     }
-  ];
-  nv.addGraph(function() {
-    var chart = nv.models.multiBarHorizontalChart()
-      .x(function(d) { return d.label; })
-      .y(function(d) { return d.value; })
-      .margin({left: 100, bottom: 75})
-      .barColor(d3.scale.category20().range())
-      .showValues(true)
-      .duration(250)
-      .showControls(false)
-    ;
-    chart.yAxis.axisLabel('Microseconds (Lower is Better)');
-    d3.select("#chart1 svg")
-      .datum(seriesData1)
-      .call(chart);
-    nv.utils.windowResize(chart.update);
-    return chart;
-  });
-  var seriesData2 = [
-    {
-      key: "SHA2",
-      values: [
-        {
-          label: "SHA2/3-224",
-          value: 2.186853
-        },
-        {
-          label: "SHA2/3-256",
-          value: 2.183836
-        },
-        {
-          label: "SHA2/3-384",
-          value: 2.190898
-        },
-        {
-          label: "SHA2/3-512",
-          value: 2.200743
-        }
-      ]
-    },
-    {
-      key: "SHA3",
-      values: [
-        {
-          label: "SHA2/3-224",
-          value: 3.221057
-        },
-        {
-          label: "SHA2/3-256",
-          value: 3.222021
-        },
-        {
-          label: "SHA2/3-384",
-          value: 3.200662
-        },
-        {
-          label: "SHA2/3-512",
-          value: 3.222704
-        },
-        {
-          label: "SHAKE128",
-          value: 3.228499
-        },
-        {
-          label: "SHAKE256",
-          value: 3.257091
-        }
-      ]
+    var chart2Image = document.querySelector('#{{ page.hash}}-chart2 > img');
+    if (chart2Image !== null && chart2Image.style !== null) {
+      chart2Image.style.display = 'none';
     }
-  ];
-  nv.addGraph(function() {
-    var chart = nv.models.multiBarHorizontalChart()
-      .x(function(d) { return d.label; })
-      .y(function(d) { return d.value; })
-      .margin({left: 100, bottom: 75})
-      .barColor(d3.scale.category20().range())
-      .showValues(true)
-      .duration(250)
-      .showControls(false)
-    ;
-    chart.yAxis.axisLabel('Microseconds (Lower is Better)');
-    d3.select("#chart2 svg")
-      .datum(seriesData2)
-      .call(chart);
-    nv.utils.windowResize(chart.update);
-    return chart;
-  });
+    var seriesData1 = [
+      {
+        key: "SHA2",
+        values: [
+          {
+            label: "SHA2/3-224",
+            value: 2.186853
+          },
+          {
+            label: "SHA2/3-256",
+            value: 2.183836
+          },
+          {
+            label: "SHA2/3-384",
+            value: 2.190898
+          },
+          {
+            label: "SHA2/3-512",
+            value: 2.200743
+          }
+        ]
+      },
+      {
+        key: "SHA3",
+        values: [
+          {
+            label: "SHA2/3-224",
+            value: 14.37063
+          },
+          {
+            label: "SHA2/3-256",
+            value: 11.97354
+          },
+          {
+            label: "SHA2/3-384",
+            value: 12.42217
+          },
+          {
+            label: "SHA2/3-512",
+            value: 11.8663
+          },
+          {
+            label: "SHAKE128",
+            value: 12.38027
+          },
+          {
+            label: "SHAKE256",
+            value: 12.96572
+          }
+        ]
+      }
+    ];
+    nv.addGraph(function() {
+      var chart = nv.models.multiBarHorizontalChart()
+        .x(function(d) { return d.label; })
+        .y(function(d) { return d.value; })
+        .margin({left: 100, bottom: 75})
+        .barColor(d3.scale.category20().range())
+        .showValues(true)
+        .duration(250)
+        .showControls(false)
+      ;
+      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
+      d3.select("#{{ page.hash}}-chart1 svg")
+        .datum(seriesData1)
+        .call(chart);
+      nv.utils.windowResize(chart.update);
+      return chart;
+    });
+    var seriesData2 = [
+      {
+        key: "SHA2",
+        values: [
+          {
+            label: "SHA2/3-224",
+            value: 2.186853
+          },
+          {
+            label: "SHA2/3-256",
+            value: 2.183836
+          },
+          {
+            label: "SHA2/3-384",
+            value: 2.190898
+          },
+          {
+            label: "SHA2/3-512",
+            value: 2.200743
+          }
+        ]
+      },
+      {
+        key: "SHA3",
+        values: [
+          {
+            label: "SHA2/3-224",
+            value: 3.221057
+          },
+          {
+            label: "SHA2/3-256",
+            value: 3.222021
+          },
+          {
+            label: "SHA2/3-384",
+            value: 3.200662
+          },
+          {
+            label: "SHA2/3-512",
+            value: 3.222704
+          },
+          {
+            label: "SHAKE128",
+            value: 3.228499
+          },
+          {
+            label: "SHAKE256",
+            value: 3.257091
+          }
+        ]
+      }
+    ];
+    nv.addGraph(function() {
+      var chart = nv.models.multiBarHorizontalChart()
+        .x(function(d) { return d.label; })
+        .y(function(d) { return d.value; })
+        .margin({left: 100, bottom: 75})
+        .barColor(d3.scale.category20().range())
+        .showValues(true)
+        .duration(250)
+        .showControls(false)
+      ;
+      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
+      d3.select("#{{ page.hash}}-chart2 svg")
+        .datum(seriesData2)
+        .call(chart);
+      nv.utils.windowResize(chart.update);
+      return chart;
+    });
+  } else {
+    var chart1Svg = document.querySelector('#{{ page.hash}}-chart1 > svg');
+    if (chart1Svg !== null && chart1Svg.style !== null) {
+      chart1Svg.style.display = 'none';
+    }
+    var chart2Svg = document.querySelector('#{{ page.hash}}-chart2 > svg');
+    if (chart2Svg !== null && chart2Svg.style !== null) {
+      chart2Svg.style.display = 'none';
+    }
+  }
 })();
 </script>

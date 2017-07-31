@@ -1,22 +1,39 @@
 # Welcome to Jekyll!
 #
 # This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely need to edit after that.
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
 # For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'jekyll serve'. If you change this file, please restart the server process.
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title:   potatosalad
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
+title: potatosalad
 tagline: blog
-email:   potatosaladx@gmail.com
-description: >
+email: potatosaladx@gmail.com
+description: > # this means to ignore newlines until "baseurl:"
   The Development Blog of Andrew Bennett
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://potatosalad.io" # the base hostname & protocol for your site
+url: "https://potatosalad.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: potatosaladx
-twitter:
-  username: potatosaladx
 github_username:  potatosalad
+
+# Build settings
+markdown: kramdown
+# theme: lanyon
+gems:
+  - jekyll-compose
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-seo-tag
+  - jekyll/tagging
+
+# Gem settings
 paginate: 5
 author:
   name:    Andrew Bennett
@@ -30,21 +47,18 @@ tag_page_dir:    tag
 # Custom vars
 version: 1.0.0
 
-# Build settings
-highlighter: rouge
-markdown: redcarpet
-gems:
-  - jekyll-angular
-  - jekyll-compose
-  - jekyll-paginate
-  - jekyll-seo-tag
-  - jekyll/tagging
-
-# Exclusions
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
 exclude:
-  - util/
   - Gemfile
   - Gemfile.lock
   - LICENSE.md
+  - node_modules
   - Rakefile
   - README.md
+  - util/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
