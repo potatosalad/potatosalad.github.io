@@ -11,12 +11,12 @@
 
   <title>
     
-      Using CEF to prerender single page applications &middot; potatosalad
+       &middot; potatosalad
     
   </title>
 
   <!-- CSS -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.1/nv.d3.min.css" rel="stylesheet" type="text/css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="/public/css/main.css">
 
   <!-- Icons -->
@@ -26,46 +26,38 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag -->
-<title>Using CEF to prerender single page applications - potatosalad</title>
-<meta property="og:title" content="Using CEF to prerender single page applications" />
-<meta name="description" content="The Chromium Embedded Framework (CEF) is a simple framework for embedding Chromium-based browsers in other applications." />
-<meta property='og:description' content="The Chromium Embedded Framework (CEF) is a simple framework for embedding Chromium-based browsers in other applications." />
-<link rel="canonical" href="https://potatosalad.io/2016/02/06/using-cef-to-prerender-single-page-applications.html" />
-<meta property='og:url' content='https://potatosalad.io/2016/02/06/using-cef-to-prerender-single-page-applications.html' />
+  <!-- Begin Jekyll SEO tag v2.2.3 -->
+<title>potatosalad | The Development Blog of Andrew Bennett</title>
+<meta property="og:title" content="potatosalad" />
+<meta name="author" content="Andrew Bennett" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The Development Blog of Andrew Bennett" />
+<meta property="og:description" content="The Development Blog of Andrew Bennett" />
+<link rel="canonical" href="http://localhost:4000/tag/performance.html" />
+<meta property="og:url" content="http://localhost:4000/tag/performance.html" />
 <meta property="og:site_name" content="potatosalad" />
 <script type="application/ld+json">
-    {
-      "@context" : "http://schema.org",
-      "@type" : "WebSite",
-      "name" : "potatosalad",
-      "url" : "https://potatosalad.io"
-    }
-  </script>
-<meta property="og:type" content="article" />
-<link rel="prev" href="https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions.html" title="Erlang NIF with timeslice reductions" />
-<script type="application/ld+json">
-    {
-      "@context": "http://schema.org",
-      "@type": "NewsArticle",
-      "headline": "Using CEF to prerender single page applications",
-      "image": null,
-      "datePublished": "2016-02-06T18:34:51-07:00",
-      "description": "The Chromium Embedded Framework (CEF) is a simple framework for embedding Chromium-based browsers in other applications."
-    }
-  </script>
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:site" content="@potatosaladx" />
-<meta name="twitter:title" content="Using CEF to prerender single page applications - potatosalad" />
-<meta name="twitter:description" content="The Chromium Embedded Framework (CEF) is a simple framework for embedding Chromium-based browsers in other applications." />
+{"@context":"http://schema.org","@type":"WebPage","headline":"potatosalad","author":{"@type":"Person","name":"Andrew Bennett"},"description":"The Development Blog of Andrew Bennett","url":"http://localhost:4000/tag/performance.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.1/nv.d3.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.5/nv.d3.min.js"></script>
 </head>
 
 
   <body>
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-73459380-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
 
     <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
      styles, `#sidebar-checkbox` for behavior. -->
@@ -91,14 +83,6 @@
     
       
         
-      
-    
-      
-    
-      
-    
-      
-    
       
     
       
@@ -140,19 +124,13 @@
     
       <a class="sidebar-nav-item" href=/tag/erlang.html>Erlang</a>
     
-      <a class="sidebar-nav-item" href=/tag/cef.html>CEF</a>
-    
-      <a class="sidebar-nav-item" href=/tag/prerender.html>prerender</a>
-    
-      <a class="sidebar-nav-item" href=/tag/c%2B%2B.html>C++</a>
-    
-      <a class="sidebar-nav-item" href=/tag/spa.html>SPA</a>
+      <a class="sidebar-nav-item" href=/tag/performance.html>Performance</a>
     
   </nav>
 
   <div class="sidebar-item">
     <p>
-      &copy; 2016. All rights reserved.
+      &copy; 2017. All rights reserved.
     </p>
   </div>
 </div>
@@ -171,54 +149,16 @@
       </div>
 
       <div class="container content">
-        <div class="post">
-  <h1 class="post-title">Using CEF to prerender single page applications</h1>
-  <span class="post-date">6 Feb, 2016</span>
-  <span class="post-comments"><a href="#disqus_thread"></a></span>
-  <p>The <a href="https://bitbucket.org/chromiumembedded/cef">Chromium Embedded Framework (CEF)</a> is a simple framework for embedding Chromium-based browsers in other applications.</p>
+        <h2>Performance</h2>
+<ul>
 
+  <li><a href="/2017/06/11/latency-of-native-functions-for-erlang-and-elixir.html">Latency of Native Functions for Erlang and Elixir</a> (11 Jun 2017 | Tags: <a href="/tag/c.html" rel="tag">C</a>, <a href="/tag/elixir.html" rel="tag">Elixir</a>, <a href="/tag/erlang.html" rel="tag">Erlang</a>, <a href="/tag/performance.html" rel="tag">Performance</a>)</li>
+
+</ul>
+
+<div id="tag-cloud">
+  <a href="/tag/c.html" class="set-5">C</a> <a href="/tag/elixir.html" class="set-5">Elixir</a> <a href="/tag/erlang.html" class="set-5">Erlang</a> <a href="/tag/performance.html" class="set-1">Performance</a>
 </div>
-
-<div class="related">
-  <h2>Related Posts</h2>
-  <ul class="related-posts">
-    
-      <li>
-        <h3>
-          <a href="/2016/02/06/erlang-nif-with-timeslice-reductions.html">
-            Erlang NIF with timeslice reductions
-            <small>06 Feb 2016</small>
-          </a>
-        </h3>
-      </li>
-    
-  </ul>
-</div>
-
-<div id="disqus_thread"></div>
-<div id="disqus_thread"></div>
-<script>
-/**
-* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
-*/
-/*
-var disqus_config = function () {
-this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-};
-*/
-(function() { // DON'T EDIT BELOW THIS LINE
-var d = document, s = d.createElement('script');
-
-s.src = '//potatosalad.disqus.com/embed.js';
-
-s.setAttribute('data-timestamp', +new Date());
-(d.head || d.body).appendChild(s);
-})();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-
 
       </div>
     </div>
