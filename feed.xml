@@ -1,44 +1,301 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>potatosalad</title>
-    <description>The Development Blog of Andrew Bennett
-</description>
-    <link>https://potatosalad.io/</link>
-    <atom:link href="https://potatosalad.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 31 Jul 2017 17:35:09 -0600</pubDate>
-    <lastBuildDate>Mon, 31 Jul 2017 17:35:09 -0600</lastBuildDate>
-    <generator>Jekyll v3.1.1</generator>
-    
-      <item>
-        <title>Erlang NIF with timeslice reductions</title>
-        <description>&lt;p&gt;Recently, I put together an Erlang asynchronous port driver named &lt;a href=&quot;https://github.com/potatosalad/erlang-keccakf1600&quot;&gt;keccakf1600&lt;/a&gt; which implements the &lt;a href=&quot;https://en.wikipedia.org/wiki/SHA-3&quot;&gt;SHA-3&lt;/a&gt; algorithms used in another one of my projects, &lt;a href=&quot;https://github.com/potatosalad/erlang-jose&quot;&gt;jose&lt;/a&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="https://potatosalad.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://potatosalad.io/" rel="alternate" type="text/html" /><updated>2017-08-05T22:35:42-06:00</updated><id>https://potatosalad.io/</id><title type="html">potatosalad</title><subtitle>The Development Blog of Andrew Bennett
+</subtitle><author><name>Andrew Bennett</name></author><entry><title type="html">Latency of Native Functions for Erlang and Elixir</title><link href="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html" rel="alternate" type="text/html" title="Latency of Native Functions for Erlang and Elixir" /><published>2017-08-05T00:00:00-06:00</published><updated>2017-08-05T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir</id><content type="html" xml:base="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html">&lt;p&gt;Erlang and C first appeared within 14 years&lt;sup&gt;&lt;a href=&quot;#footnote-post-2017-08-05-b55da7d7-1&quot;&gt;*&lt;/a&gt;&lt;/sup&gt; of one another.&lt;/p&gt;
+
+&lt;p&gt;In the 30+ years together both languages have gone through many changes.  The methods of interoperability have also changed with time.&lt;/p&gt;
+
+&lt;p&gt;There are now &lt;em&gt;several&lt;/em&gt; methods to integrate native functions with Erlang or Elixir code.&lt;/p&gt;
+
+&lt;p&gt;My goal in writing this article is to explore these methods and measure latency from the perspective of the Erlang VM.&lt;/p&gt;
+
+&lt;p&gt;&lt;small&gt;&lt;sup&gt;&lt;a name=&quot;footnote-post-2017-08-05-b55da7d7-1&quot;&gt;*&lt;/a&gt;&lt;/sup&gt; Based on C first appearing in 1972 and Erlang first appearing in 1986.&lt;/small&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;acronym title=&quot;Too long; didn't read&quot;&gt;&lt;strong&gt;TL;DR&lt;/strong&gt;&lt;/acronym&gt; Need a native function (C, C++, Rust, etc.) integrated with Erlang or Elixir that is isolation, complexity, or latency sensitive?&lt;/p&gt;
+
+&lt;p&gt;Having a hard time deciding whether you should write a node, port, port driver, or NIF?&lt;/p&gt;
+
+&lt;p&gt;Use this potentially helpful and fairly unscientific table to help you decide:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Type&lt;/th&gt;
+    &lt;th&gt;Isolation&lt;/th&gt;
+    &lt;th&gt;Complexity&lt;/th&gt;
+    &lt;th&gt;Latency&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Node&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;Network&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Highest&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Highest&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Port&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Process&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;High&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;High&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Port Driver&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Shared&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Low&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Low&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;NIF&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Shared&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;Lowest&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;Lowest&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;overview&quot;&gt;Overview&lt;/h3&gt;
+
+&lt;p&gt;Erlang has an excellent &lt;a href=&quot;http://erlang.org/doc/tutorial/users_guide.html&quot;&gt;Interoperability Tutorial User’s Guide&lt;/a&gt; that provides examples for the different ways of integrating a program written in Erlang or Elixir with a program written in another programming language.&lt;/p&gt;
+
+&lt;p&gt;The simplest test I could think of to measure the latency was to round trip an Erlang term from the Erlang VM to the native function and back again.&lt;/p&gt;
+
+&lt;p&gt;However, the term would need to be large enough to hopefully expose any weaknesses for a given implementation.&lt;/p&gt;
+
+&lt;p&gt;Following the guidance from Erlang’s documentation, I implemented slightly more complex examples of the following methods of interoperability:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/cnode.html&quot;&gt;C Node&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/tree/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/c_node&quot;&gt;C source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency/c_node.ex&quot;&gt;Elixir source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/src/latency_c_node.erl&quot;&gt;Erlang source&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/nif.html&quot;&gt;NIF&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/tree/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif&quot;&gt;C source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency/nif.ex&quot;&gt;Elixir source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/src/latency_nif.erl&quot;&gt;Erlang source&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_portdriver.html&quot;&gt;Port Driver&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/tree/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv&quot;&gt;C source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency/port_driver.ex&quot;&gt;Elixir source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/src/latency_drv.erl&quot;&gt;Erlang source&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_port.html&quot;&gt;Port&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/tree/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/port&quot;&gt;C source&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency/port.ex&quot;&gt;Elixir source&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The NIF and Port Driver implementations have a few different internal strategies for additional comparison (like Dirty NIF and &lt;code class=&quot;highlighter-rouge&quot;&gt;iodata()&lt;/code&gt; based port output).&lt;/p&gt;
+
+&lt;p&gt;Certain methods should have higher levels of latency based on serialization and isolation requirements.  For example, a C Node requires serialization of the entire term in order to pass it back and forth over a TCP connection.  A NIF, by comparison, requires no serialization and operates on the term itself in memory.&lt;/p&gt;
+
+&lt;p&gt;Each implementation was tested with a ~64KB binary full of 1’s as the sole element of a 1-arity tuple for 100,000 iterations.  The measured elapsed time for each method were then fed into &lt;a href=&quot;http://hdrhistogram.org/&quot;&gt;HDR Histogram&lt;/a&gt; for latency analysis.&lt;/p&gt;
+
+&lt;p&gt;In other words, I essentially did the following on the &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency.ex&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Latency&lt;/code&gt;&lt;/a&gt; module:&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;term&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:binary&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;copy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1024&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;
+&lt;span class=&quot;no&quot;&gt;Latency&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compare&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;100_000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;c-nodeport-versus-port-drivernif&quot;&gt;C Node/Port versus Port Driver/NIF&lt;/h3&gt;
+
+&lt;p&gt;First, let’s compare the 4 major types of native functions:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart1.png&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart1.png&quot; alt=&quot;chart1&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Comparison of results using the order of magnitude of average latency:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Type&lt;/th&gt;
+    &lt;th&gt;Isolation&lt;/th&gt;
+    &lt;th&gt;Latency&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Node&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;Network&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc; text-align: right;&quot;&gt;&lt;tt&gt;~100μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Port&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Process&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc; text-align: right;&quot;&gt;&lt;tt&gt;~100μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Port Driver&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Shared&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~10μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;NIF&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;Shared&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~0.1μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p&gt;These tests were run on the same machine, so there’s little surpise that the Node and Port latencies are essentially just benchmarking pipe speeds of the operating system itself (in this case macOS 10.12).  Were the Erlang and C nodes located on different machines, I would expect the latency to be higher for the Node test.&lt;/p&gt;
+
+&lt;p&gt;It’s also worth noting that C Nodes and Ports are the most isolated form of native function calling from the Erlang VM.  This means that a bug in the C code that causes the C Node or Port to crash will not take down the entire VM.&lt;/p&gt;
+
+&lt;h3 id=&quot;port-driver&quot;&gt;Port Driver&lt;/h3&gt;
+
+&lt;p&gt;Port drivers, under certain circumstances, can be roughly as fast as a NIF.  This is especially true for very small terms or when the majority of the work performed is I/O or binary-based.&lt;/p&gt;
+
+&lt;p&gt;The documentation for &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;driver_entry&lt;/code&gt;&lt;/a&gt; mentions that &lt;a href=&quot;http://erlang.org/doc/man/erlang.html#port_control-3&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;erlang:port_control/3&lt;/code&gt;&lt;/a&gt; should be the fastest way to call a native function.  This seems to be true for very small terms, but larger terms cause the performance to be almost identical to &lt;a href=&quot;http://erlang.org/doc/man/erlang.html#port_call-3&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;erlang:port_call/3&lt;/code&gt;&lt;/a&gt;.  Converting terms to the &lt;a href=&quot;http://erlang.org/doc/apps/erts/erl_ext_dist.html&quot;&gt;External Term Format&lt;/a&gt; and sending with &lt;a href=&quot;http://erlang.org/doc/man/erlang.html#port_command-3&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;erlang:port_command/3&lt;/code&gt;&lt;/a&gt; (which in turn calls the &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#outputv&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;outputv&lt;/code&gt;&lt;/a&gt; callback) actually appears to have slightly less latency.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#call&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;call&lt;/code&gt;&lt;/a&gt; — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L61-L70&quot;&gt;lines 61-70 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_drv.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#control&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;control&lt;/code&gt;&lt;/a&gt; — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52&quot;&gt;lines 41-52 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_drv.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#outputv&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;outputv&lt;/code&gt;&lt;/a&gt; — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59&quot;&gt;lines 54-59 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_drv.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png&quot; alt=&quot;chart2&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, &lt;a href=&quot;http://erlang.org/doc/man/erlang.html#port_call-3&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;erlang:port_call/3&lt;/code&gt;&lt;/a&gt; allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Type&lt;/th&gt;
+    &lt;th&gt;Data Type&lt;/th&gt;
+    &lt;th&gt;Latency&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;call&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;term()&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~15μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;control&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;iodata()&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~15μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;outputv&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;iodata()&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~10μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;nif&quot;&gt;NIF&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html&quot;&gt;Native Implemented Function (NIF)&lt;/a&gt; is a relatively recent addition to OTP and is the fastest way to call native functions.  However, a mis-behaving NIF can easily destabilize or crash the entire Erlang VM.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#dirty_nifs&quot;&gt;Dirty NIF&lt;/a&gt; and Yielding (or Future) NIF with &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enif_schedule_nif&lt;/code&gt;&lt;/a&gt; are even more recent additions that help prevent blocking the Erlang VM schedulers during execution or (in the case of I/O) waiting.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Dirty CPU — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L20-L24&quot;&gt;lines 20-24 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Dirty I/O — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L26-L30&quot;&gt;lines 26-30 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Future — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36&quot;&gt;lines 32-36 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Normal — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18&quot;&gt;lines 14-18 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png&quot; alt=&quot;chart3&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The Normal NIF call is the only one that doesn’t have any sort of context switching involved.  The Yielding (or Future) NIF also doesn’t involve much of a context switch as it yields control back to the same scheduler that dispatched the call.  Dirty NIF calls, however, result in a ~2μs context switch delay as the function gets enqueued on the dirty thread pool.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Type&lt;/th&gt;
+    &lt;th&gt;Context Switch&lt;/th&gt;
+    &lt;th&gt;Latency&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Dirty CPU&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Thread Queue&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~2.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Dirty I/O&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Thread Queue&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~2.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Future&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Yield&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~0.5μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Normal&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc;&quot;&gt;&lt;tt&gt;None&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~0.1μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Just for fun, I was curious about the latency differences between the new Dirty NIF functionality and the previous method of using a Threaded NIF or the Async NIF (or Thread Queue) by &lt;a href=&quot;https://github.com/gburd&quot;&gt;Gregory Burd&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Thread New — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72&quot;&gt;lines 38-72 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Thread Queue — &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90&quot;&gt;lines 74-90 of &lt;code class=&quot;highlighter-rouge&quot;&gt;latency_nif.c&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png&quot; alt=&quot;chart4&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;As it turns out, creating and destroying a thread for each and every call is unwise for a few reasons; poor latency being one of them.  The Async NIF (or Thread Queue) has the advantage of providing a pool per NIF instead of having to share the global thread pool with other NIFs.  However, Dirty NIF thread pools are definitely more optimized and are typically 4x faster than the Async NIF implementation.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;th&gt;Type&lt;/th&gt;
+    &lt;th&gt;Pool Type&lt;/th&gt;
+    &lt;th&gt;Latency&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Thread New&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc;&quot;&gt;&lt;tt&gt;None&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #fcc; text-align: right;&quot;&gt;&lt;tt&gt;~50.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Thread Queue&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;NIF&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc; text-align: right;&quot;&gt;&lt;tt&gt;~8.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Dirty CPU&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Global&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~2.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;&lt;tt&gt;Dirty I/O&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #ffc;&quot;&gt;&lt;tt&gt;Global&lt;/tt&gt;&lt;/td&gt;
+    &lt;td style=&quot;background-color: #cfc; text-align: right;&quot;&gt;&lt;tt&gt;~2.0μs&lt;/tt&gt;&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h3&gt;
+
+&lt;p&gt;If isolation from/protection of the Erlang VM is highest priority, a C Node or Port are your best options.  If your primary concern is low latency or low complexity, using a NIF for your native function is your best option.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;As a side note:&lt;/em&gt; For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_select&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enif_select&lt;/code&gt;&lt;/a&gt;, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.&lt;/p&gt;</content><author><name>Andrew Bennett</name></author><category term="C" /><category term="Elixir" /><category term="Erlang" /><category term="Performance" /><summary type="html">Erlang and C first appeared within 14 years* of one another.</summary></entry><entry><title type="html">Erlang NIF with timeslice reductions</title><link href="https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions.html" rel="alternate" type="text/html" title="Erlang NIF with timeslice reductions" /><published>2016-02-06T00:00:00-07:00</published><updated>2016-02-06T00:00:00-07:00</updated><id>https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions</id><content type="html" xml:base="https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions.html">&lt;p&gt;Recently, I put together an Erlang asynchronous port driver named &lt;a href=&quot;https://github.com/potatosalad/erlang-keccakf1600&quot;&gt;keccakf1600&lt;/a&gt; which implements the &lt;a href=&quot;https://en.wikipedia.org/wiki/SHA-3&quot;&gt;SHA-3&lt;/a&gt; algorithms used in another one of my projects, &lt;a href=&quot;https://github.com/potatosalad/erlang-jose&quot;&gt;jose&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;See version &lt;a href=&quot;https://github.com/potatosalad/erlang-keccakf1600/tree/1.0.2&quot;&gt;1.0.2 of keccakf1600&lt;/a&gt; for the original port driver implementation.&lt;/p&gt;
 
 &lt;p&gt;When interfacing with native C and the Erlang VM, you essentially have 3 options to choose from:&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_portdriver.html&quot;&gt;Port Driver&lt;/a&gt; &amp;mdash; a shared library linked with &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html&quot;&gt;&lt;code&gt;driver_entry&lt;/code&gt;&lt;/a&gt; (I/O heavy operations are typically best suited for this type)&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/nif.html&quot;&gt;NIF&lt;/a&gt; &amp;mdash; a shared library linked with &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html&quot;&gt;&lt;code&gt;ERL_NIF_INIT&lt;/code&gt;&lt;/a&gt; (fast synchronous operations are typically best suited for this type)&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_port.html&quot;&gt;Port&lt;/a&gt; &amp;mdash; an external program which typically communicates with the Erlang VM over &lt;code&gt;stdin&lt;/code&gt; and &lt;code&gt;stdout&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_portdriver.html&quot;&gt;Port Driver&lt;/a&gt; — a shared library linked with &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;driver_entry&lt;/code&gt;&lt;/a&gt; (I/O heavy operations are typically best suited for this type)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/nif.html&quot;&gt;NIF&lt;/a&gt; — a shared library linked with &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ERL_NIF_INIT&lt;/code&gt;&lt;/a&gt; (fast synchronous operations are typically best suited for this type)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://erlang.org/doc/tutorial/c_port.html&quot;&gt;Port&lt;/a&gt; — an external program which typically communicates with the Erlang VM over &lt;code class=&quot;highlighter-rouge&quot;&gt;stdin&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;stdout&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use &lt;a href=&quot;http://erlang.org/doc/man/erl_driver.html#driver_async%20&quot;&gt;&lt;code&gt;driver_async&lt;/code&gt;&lt;/a&gt; combined with &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#ready_async&quot;&gt;&lt;code&gt;ready_async&lt;/code&gt;&lt;/a&gt; to perform the blocking operations on &amp;ldquo;a thread separate from the emulator thread.&amp;rdquo;  I used the &lt;a href=&quot;http://erlang.org/doc/man/ei.html&quot;&gt;&lt;code&gt;ei&lt;/code&gt;&lt;/a&gt; library in order to communicate between the Erlang VM and the port driver written in C.&lt;/p&gt;
+&lt;p&gt;My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use &lt;a href=&quot;http://erlang.org/doc/man/erl_driver.html#driver_async%20&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;driver_async&lt;/code&gt;&lt;/a&gt; combined with &lt;a href=&quot;http://erlang.org/doc/man/driver_entry.html#ready_async&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ready_async&lt;/code&gt;&lt;/a&gt; to perform the blocking operations on “a thread separate from the emulator thread.”  I used the &lt;a href=&quot;http://erlang.org/doc/man/ei.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ei&lt;/code&gt;&lt;/a&gt; library in order to communicate between the Erlang VM and the port driver written in C.&lt;/p&gt;
 
-&lt;p&gt;Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang &lt;a href=&quot;http://erlang.org/doc/man/crypto.html&quot;&gt;&lt;code&gt;crypto&lt;/code&gt;&lt;/a&gt; library.&lt;/p&gt;
+&lt;p&gt;Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang &lt;a href=&quot;http://erlang.org/doc/man/crypto.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;crypto&lt;/code&gt;&lt;/a&gt; library.&lt;/p&gt;
 
 &lt;p&gt;The results were not terribly impressive:&lt;/p&gt;
 
-&lt;div id=&quot;chart1&quot;&gt;
+&lt;div id=&quot;post-2016-02-06-ae71986a-chart1&quot;&gt;
+  &lt;img src=&quot;https://potatosalad.io/assets/post-2016-02-06-ae71986a/chart1.svg&quot; style=&quot;width:100%;height:100%;&quot; /&gt;
   &lt;svg height=&quot;300&quot;&gt;&lt;/svg&gt;
 &lt;/div&gt;
 
 &lt;p&gt;The two main concerns I had with the results were:&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;Was the SHA-3 implementation I used (based on &lt;a href=&quot;http://sourceforge.net/projects/ed448goldilocks/&quot;&gt;ed448goldilocks&lt;/a&gt;) really 5-7 times slower than the SHA-2 algorithms?&lt;/li&gt;
-&lt;li&gt;Why was there so much variance between the SHA-3 algorithms versus the variance observed between the SHA-2 algorithms?&lt;/li&gt;
+  &lt;li&gt;Was the SHA-3 implementation I used (based on &lt;a href=&quot;http://sourceforge.net/projects/ed448goldilocks/&quot;&gt;ed448goldilocks&lt;/a&gt;) really 5-7 times slower than the SHA-2 algorithms?&lt;/li&gt;
+  &lt;li&gt;Why was there so much variance between the SHA-3 algorithms versus the variance observed between the SHA-2 algorithms?&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;p&gt;Concern #1 was ruled out by directly testing the C version of the algorithms, for small message sizes they were typically within 1-2μs of each other.&lt;/p&gt;
@@ -47,11 +304,12 @@
 
 &lt;p&gt;I highly recommend reading the two presentations from the bitwise project: &lt;a href=&quot;https://github.com/vinoski/bitwise/raw/master/vinoski-opt-native-code.pdf&quot;&gt;vinoski-opt-native-code.pdf&lt;/a&gt; and &lt;a href=&quot;https://github.com/vinoski/bitwise/raw/master/vinoski-schedulers.pdf&quot;&gt;vinoski-schedulers.pdf&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;After experimenting with the two options, I decided to use &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice&quot;&gt;&lt;code&gt;enif_consume_timeslice&lt;/code&gt;&lt;/a&gt; combined with &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif&quot;&gt;&lt;code&gt;enif_schedule_nif&lt;/code&gt;&lt;/a&gt; to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.&lt;/p&gt;
+&lt;p&gt;After experimenting with the two options, I decided to use &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enif_consume_timeslice&lt;/code&gt;&lt;/a&gt; combined with &lt;a href=&quot;http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;enif_schedule_nif&lt;/code&gt;&lt;/a&gt; to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.&lt;/p&gt;
 
 &lt;p&gt;I rewrote the port driver as a NIF and released it as version &lt;a href=&quot;https://github.com/potatosalad/erlang-keccakf1600/tree/2.0.0&quot;&gt;2.0.0 of keccakf1600&lt;/a&gt; and ran the same benchmark again:&lt;/p&gt;
 
-&lt;div id=&quot;chart2&quot;&gt;
+&lt;div id=&quot;post-2016-02-06-ae71986a-chart2&quot;&gt;
+  &lt;img src=&quot;https://potatosalad.io/assets/post-2016-02-06-ae71986a/chart2.svg&quot; style=&quot;width:100%;height:100%;&quot; /&gt;
   &lt;svg height=&quot;300&quot;&gt;&lt;/svg&gt;
 &lt;/div&gt;
 
@@ -59,159 +317,166 @@
 
 &lt;script&gt;
 (function() {
-  var seriesData1 = [
-    {
-      key: &quot;SHA2&quot;,
-      values: [
-        {
-          label: &quot;SHA2/3-224&quot;,
-          value: 2.186853
-        },
-        {
-          label: &quot;SHA2/3-256&quot;,
-          value: 2.183836
-        },
-        {
-          label: &quot;SHA2/3-384&quot;,
-          value: 2.190898
-        },
-        {
-          label: &quot;SHA2/3-512&quot;,
-          value: 2.200743
-        }
-      ]
-    },
-    {
-      key: &quot;SHA3&quot;,
-      values: [
-        {
-          label: &quot;SHA2/3-224&quot;,
-          value: 14.37063
-        },
-        {
-          label: &quot;SHA2/3-256&quot;,
-          value: 11.97354
-        },
-        {
-          label: &quot;SHA2/3-384&quot;,
-          value: 12.42217
-        },
-        {
-          label: &quot;SHA2/3-512&quot;,
-          value: 11.8663
-        },
-        {
-          label: &quot;SHAKE128&quot;,
-          value: 12.38027
-        },
-        {
-          label: &quot;SHAKE256&quot;,
-          value: 12.96572
-        }
-      ]
+  var nvd3Supported = false;
+  if (typeof window.nv !== 'undefined' &amp;&amp; typeof window.d3 !== 'undefined') {
+    nvd3Supported = true;
+  }
+  if (!nvd3Supported) {
+    var chart1Image = document.querySelector('#post-2016-02-06-ae71986a-chart1 &gt; img');
+    if (chart1Image !== null &amp;&amp; chart1Image.style !== null) {
+      chart1Image.style.display = 'none';
     }
-  ];
-  nv.addGraph(function() {
-    var chart = nv.models.multiBarHorizontalChart()
-      .x(function(d) { return d.label; })
-      .y(function(d) { return d.value; })
-      .margin({left: 100, bottom: 75})
-      .barColor(d3.scale.category20().range())
-      .showValues(true)
-      .duration(250)
-      .showControls(false)
-    ;
-    chart.yAxis.axisLabel(&#39;Microseconds (Lower is Better)&#39;);
-    d3.select(&quot;#chart1 svg&quot;)
-      .datum(seriesData1)
-      .call(chart);
-    nv.utils.windowResize(chart.update);
-    return chart;
-  });
-  var seriesData2 = [
-    {
-      key: &quot;SHA2&quot;,
-      values: [
-        {
-          label: &quot;SHA2/3-224&quot;,
-          value: 2.186853
-        },
-        {
-          label: &quot;SHA2/3-256&quot;,
-          value: 2.183836
-        },
-        {
-          label: &quot;SHA2/3-384&quot;,
-          value: 2.190898
-        },
-        {
-          label: &quot;SHA2/3-512&quot;,
-          value: 2.200743
-        }
-      ]
-    },
-    {
-      key: &quot;SHA3&quot;,
-      values: [
-        {
-          label: &quot;SHA2/3-224&quot;,
-          value: 3.221057
-        },
-        {
-          label: &quot;SHA2/3-256&quot;,
-          value: 3.222021
-        },
-        {
-          label: &quot;SHA2/3-384&quot;,
-          value: 3.200662
-        },
-        {
-          label: &quot;SHA2/3-512&quot;,
-          value: 3.222704
-        },
-        {
-          label: &quot;SHAKE128&quot;,
-          value: 3.228499
-        },
-        {
-          label: &quot;SHAKE256&quot;,
-          value: 3.257091
-        }
-      ]
+    var chart2Image = document.querySelector('#post-2016-02-06-ae71986a-chart2 &gt; img');
+    if (chart2Image !== null &amp;&amp; chart2Image.style !== null) {
+      chart2Image.style.display = 'none';
     }
-  ];
-  nv.addGraph(function() {
-    var chart = nv.models.multiBarHorizontalChart()
-      .x(function(d) { return d.label; })
-      .y(function(d) { return d.value; })
-      .margin({left: 100, bottom: 75})
-      .barColor(d3.scale.category20().range())
-      .showValues(true)
-      .duration(250)
-      .showControls(false)
-    ;
-    chart.yAxis.axisLabel(&#39;Microseconds (Lower is Better)&#39;);
-    d3.select(&quot;#chart2 svg&quot;)
-      .datum(seriesData2)
-      .call(chart);
-    nv.utils.windowResize(chart.update);
-    return chart;
-  });
+    var seriesData1 = [
+      {
+        key: &quot;SHA2&quot;,
+        values: [
+          {
+            label: &quot;SHA2/3-224&quot;,
+            value: 2.186853
+          },
+          {
+            label: &quot;SHA2/3-256&quot;,
+            value: 2.183836
+          },
+          {
+            label: &quot;SHA2/3-384&quot;,
+            value: 2.190898
+          },
+          {
+            label: &quot;SHA2/3-512&quot;,
+            value: 2.200743
+          }
+        ]
+      },
+      {
+        key: &quot;SHA3&quot;,
+        values: [
+          {
+            label: &quot;SHA2/3-224&quot;,
+            value: 14.37063
+          },
+          {
+            label: &quot;SHA2/3-256&quot;,
+            value: 11.97354
+          },
+          {
+            label: &quot;SHA2/3-384&quot;,
+            value: 12.42217
+          },
+          {
+            label: &quot;SHA2/3-512&quot;,
+            value: 11.8663
+          },
+          {
+            label: &quot;SHAKE128&quot;,
+            value: 12.38027
+          },
+          {
+            label: &quot;SHAKE256&quot;,
+            value: 12.96572
+          }
+        ]
+      }
+    ];
+    nv.addGraph(function() {
+      var chart = nv.models.multiBarHorizontalChart()
+        .x(function(d) { return d.label; })
+        .y(function(d) { return d.value; })
+        .margin({left: 100, bottom: 75})
+        .barColor(d3.scale.category20().range())
+        .showValues(true)
+        .duration(250)
+        .showControls(false)
+      ;
+      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
+      d3.select(&quot;#post-2016-02-06-ae71986a-chart1 svg&quot;)
+        .datum(seriesData1)
+        .call(chart);
+      nv.utils.windowResize(chart.update);
+      return chart;
+    });
+    var seriesData2 = [
+      {
+        key: &quot;SHA2&quot;,
+        values: [
+          {
+            label: &quot;SHA2/3-224&quot;,
+            value: 2.186853
+          },
+          {
+            label: &quot;SHA2/3-256&quot;,
+            value: 2.183836
+          },
+          {
+            label: &quot;SHA2/3-384&quot;,
+            value: 2.190898
+          },
+          {
+            label: &quot;SHA2/3-512&quot;,
+            value: 2.200743
+          }
+        ]
+      },
+      {
+        key: &quot;SHA3&quot;,
+        values: [
+          {
+            label: &quot;SHA2/3-224&quot;,
+            value: 3.221057
+          },
+          {
+            label: &quot;SHA2/3-256&quot;,
+            value: 3.222021
+          },
+          {
+            label: &quot;SHA2/3-384&quot;,
+            value: 3.200662
+          },
+          {
+            label: &quot;SHA2/3-512&quot;,
+            value: 3.222704
+          },
+          {
+            label: &quot;SHAKE128&quot;,
+            value: 3.228499
+          },
+          {
+            label: &quot;SHAKE256&quot;,
+            value: 3.257091
+          }
+        ]
+      }
+    ];
+    nv.addGraph(function() {
+      var chart = nv.models.multiBarHorizontalChart()
+        .x(function(d) { return d.label; })
+        .y(function(d) { return d.value; })
+        .margin({left: 100, bottom: 75})
+        .barColor(d3.scale.category20().range())
+        .showValues(true)
+        .duration(250)
+        .showControls(false)
+      ;
+      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
+      d3.select(&quot;#post-2016-02-06-ae71986a-chart2 svg&quot;)
+        .datum(seriesData2)
+        .call(chart);
+      nv.utils.windowResize(chart.update);
+      return chart;
+    });
+  } else {
+    var chart1Svg = document.querySelector('#post-2016-02-06-ae71986a-chart1 &gt; svg');
+    if (chart1Svg !== null &amp;&amp; chart1Svg.style !== null) {
+      chart1Svg.style.display = 'none';
+    }
+    var chart2Svg = document.querySelector('#post-2016-02-06-ae71986a-chart2 &gt; svg');
+    if (chart2Svg !== null &amp;&amp; chart2Svg.style !== null) {
+      chart2Svg.style.display = 'none';
+    }
+  }
 })();
-&lt;/script&gt;
-</description>
-        <pubDate>Sat, 06 Feb 2016 00:00:00 -0700</pubDate>
-        <link>https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions.html</link>
-        <guid isPermaLink="true">https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions.html</guid>
-        
-        <category>C</category>
-        
-        <category>Elixir</category>
-        
-        <category>Erlang</category>
-        
-        
-      </item>
-    
-  </channel>
-</rss>
+&lt;/script&gt;</content><author><name>Andrew Bennett</name></author><category term="C" /><category term="Elixir" /><category term="Erlang" /><summary type="html">Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose.</summary></entry></feed>

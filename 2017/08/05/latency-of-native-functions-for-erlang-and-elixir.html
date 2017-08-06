@@ -11,7 +11,7 @@
 
   <title>
     
-      potatosalad &middot; blog
+      Latency of Native Functions for Erlang and Elixir &middot; potatosalad
     
   </title>
 
@@ -27,17 +27,19 @@
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
   <!-- Begin Jekyll SEO tag v2.2.3 -->
-<title>Home | potatosalad</title>
-<meta property="og:title" content="Home" />
+<title>Latency of Native Functions for Erlang and Elixir | potatosalad</title>
+<meta property="og:title" content="Latency of Native Functions for Erlang and Elixir" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="The Development Blog of Andrew Bennett" />
-<meta property="og:description" content="The Development Blog of Andrew Bennett" />
-<link rel="canonical" href="https://potatosalad.io/" />
-<meta property="og:url" content="https://potatosalad.io/" />
+<meta name="description" content="Erlang and C first appeared within 14 years* of one another." />
+<meta property="og:description" content="Erlang and C first appeared within 14 years* of one another." />
+<link rel="canonical" href="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html" />
+<meta property="og:url" content="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html" />
 <meta property="og:site_name" content="potatosalad" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-08-05T00:00:00-06:00" />
 <script type="application/ld+json">
-{"@context":"http://schema.org","@type":"WebSite","name":"potatosalad","headline":"Home","author":{"@type":"Person","name":"Andrew Bennett"},"description":"The Development Blog of Andrew Bennett","url":"https://potatosalad.io/"}</script>
+{"@context":"http://schema.org","@type":"BlogPosting","headline":"Latency of Native Functions for Erlang and Elixir","author":{"@type":"Person","name":"Andrew Bennett"},"datePublished":"2017-08-05T00:00:00-06:00","dateModified":"2017-08-05T00:00:00-06:00","description":"Erlang and C first appeared within 14 years* of one another.","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html"},"url":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -149,18 +151,12 @@
       </div>
 
       <div class="container content">
-        <div class="posts">
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html">
-        Latency of Native Functions for Erlang and Elixir
-      </a>
-    </h1>
-    <span class="post-date">5 Aug, 2017</span>
-    <span class="post-comments"><a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html#disqus_thread"></a></span>
-    <hr>
-    <p>Erlang and C first appeared within 14 years<sup><a href="#footnote-post-2017-08-05-b55da7d7-1">*</a></sup> of one another.</p>
+        <div class="post">
+  <h1 class="post-title">Latency of Native Functions for Erlang and Elixir</h1>
+  <span class="post-date">5 Aug, 2017</span>
+  <span class="post-comments"><a href="#disqus_thread"></a></span>
+  <hr>
+  <p>Erlang and C first appeared within 14 years<sup><a href="#footnote-post-2017-08-05-b55da7d7-1">*</a></sup> of one another.</p>
 
 <p>In the 30+ years together both languages have gone through many changes.  The methods of interoperability have also changed with time.</p>
 
@@ -431,245 +427,47 @@
 
 <p><em>As a side note:</em> For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new <a href="http://erlang.org/doc/man/erl_nif.html#enif_select"><code class="highlighter-rouge">enif_select</code></a>, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.</p>
 
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2016/02/06/erlang-nif-with-timeslice-reductions.html">
-        Erlang NIF with timeslice reductions
-      </a>
-    </h1>
-    <span class="post-date">6 Feb, 2016</span>
-    <span class="post-comments"><a href="/2016/02/06/erlang-nif-with-timeslice-reductions.html#disqus_thread"></a></span>
-    <hr>
-    <p>Recently, I put together an Erlang asynchronous port driver named <a href="https://github.com/potatosalad/erlang-keccakf1600">keccakf1600</a> which implements the <a href="https://en.wikipedia.org/wiki/SHA-3">SHA-3</a> algorithms used in another one of my projects, <a href="https://github.com/potatosalad/erlang-jose">jose</a>.</p>
-
-<p>See version <a href="https://github.com/potatosalad/erlang-keccakf1600/tree/1.0.2">1.0.2 of keccakf1600</a> for the original port driver implementation.</p>
-
-<p>When interfacing with native C and the Erlang VM, you essentially have 3 options to choose from:</p>
-
-<ol>
-  <li><a href="http://erlang.org/doc/tutorial/c_portdriver.html">Port Driver</a> — a shared library linked with <a href="http://erlang.org/doc/man/driver_entry.html"><code class="highlighter-rouge">driver_entry</code></a> (I/O heavy operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/nif.html">NIF</a> — a shared library linked with <a href="http://erlang.org/doc/man/erl_nif.html"><code class="highlighter-rouge">ERL_NIF_INIT</code></a> (fast synchronous operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/c_port.html">Port</a> — an external program which typically communicates with the Erlang VM over <code class="highlighter-rouge">stdin</code> and <code class="highlighter-rouge">stdout</code></li>
-</ol>
-
-<p>My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use <a href="http://erlang.org/doc/man/erl_driver.html#driver_async%20"><code class="highlighter-rouge">driver_async</code></a> combined with <a href="http://erlang.org/doc/man/driver_entry.html#ready_async"><code class="highlighter-rouge">ready_async</code></a> to perform the blocking operations on “a thread separate from the emulator thread.”  I used the <a href="http://erlang.org/doc/man/ei.html"><code class="highlighter-rouge">ei</code></a> library in order to communicate between the Erlang VM and the port driver written in C.</p>
-
-<p>Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang <a href="http://erlang.org/doc/man/crypto.html"><code class="highlighter-rouge">crypto</code></a> library.</p>
-
-<p>The results were not terribly impressive:</p>
-
-<div id="post-2016-02-06-ae71986a-chart1">
-  <img src="https://potatosalad.io/assets/post-2016-02-06-ae71986a/chart1.svg" style="width:100%;height:100%;" />
-  <svg height="300"></svg>
 </div>
 
-<p>The two main concerns I had with the results were:</p>
-
-<ol>
-  <li>Was the SHA-3 implementation I used (based on <a href="http://sourceforge.net/projects/ed448goldilocks/">ed448goldilocks</a>) really 5-7 times slower than the SHA-2 algorithms?</li>
-  <li>Why was there so much variance between the SHA-3 algorithms versus the variance observed between the SHA-2 algorithms?</li>
-</ol>
-
-<p>Concern #1 was ruled out by directly testing the C version of the algorithms, for small message sizes they were typically within 1-2μs of each other.</p>
-
-<p>Concern #2 required more research, which eventually led me to the <a href="https://github.com/vinoski/bitwise">bitwise</a> project by Steve Vinoski.  The project explores some of the strategies for dealing with the synchronous nature of a NIF without blocking the scheduler by keeping track of reductions during a given <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice">timeslice</a>.  It also explores strategies using the experimental <a href="http://erlang.org/doc/man/erl_nif.html#dirty_nifs">dirty NIF</a> feature.</p>
-
-<p>I highly recommend reading the two presentations from the bitwise project: <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-opt-native-code.pdf">vinoski-opt-native-code.pdf</a> and <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-schedulers.pdf">vinoski-schedulers.pdf</a>.</p>
-
-<p>After experimenting with the two options, I decided to use <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice"><code class="highlighter-rouge">enif_consume_timeslice</code></a> combined with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="highlighter-rouge">enif_schedule_nif</code></a> to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.</p>
-
-<p>I rewrote the port driver as a NIF and released it as version <a href="https://github.com/potatosalad/erlang-keccakf1600/tree/2.0.0">2.0.0 of keccakf1600</a> and ran the same benchmark again:</p>
-
-<div id="post-2016-02-06-ae71986a-chart2">
-  <img src="https://potatosalad.io/assets/post-2016-02-06-ae71986a/chart2.svg" style="width:100%;height:100%;" />
-  <svg height="300"></svg>
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2016/02/06/erlang-nif-with-timeslice-reductions.html">
+            Erlang NIF with timeslice reductions
+            <small>06 Feb 2016</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
 </div>
 
-<p>These results are much more consistent and closer to my original expectations.  I plan on refactoring the <a href="https://github.com/potatosalad/erlang-libsodium">erlang-libsodium</a> project using the same technique.</p>
-
+<div id="disqus_thread"></div>
+<div id="disqus_thread"></div>
 <script>
-(function() {
-  var nvd3Supported = false;
-  if (typeof window.nv !== 'undefined' && typeof window.d3 !== 'undefined') {
-    nvd3Supported = true;
-  }
-  if (!nvd3Supported) {
-    var chart1Image = document.querySelector('#post-2016-02-06-ae71986a-chart1 > img');
-    if (chart1Image !== null && chart1Image.style !== null) {
-      chart1Image.style.display = 'none';
-    }
-    var chart2Image = document.querySelector('#post-2016-02-06-ae71986a-chart2 > img');
-    if (chart2Image !== null && chart2Image.style !== null) {
-      chart2Image.style.display = 'none';
-    }
-    var seriesData1 = [
-      {
-        key: "SHA2",
-        values: [
-          {
-            label: "SHA2/3-224",
-            value: 2.186853
-          },
-          {
-            label: "SHA2/3-256",
-            value: 2.183836
-          },
-          {
-            label: "SHA2/3-384",
-            value: 2.190898
-          },
-          {
-            label: "SHA2/3-512",
-            value: 2.200743
-          }
-        ]
-      },
-      {
-        key: "SHA3",
-        values: [
-          {
-            label: "SHA2/3-224",
-            value: 14.37063
-          },
-          {
-            label: "SHA2/3-256",
-            value: 11.97354
-          },
-          {
-            label: "SHA2/3-384",
-            value: 12.42217
-          },
-          {
-            label: "SHA2/3-512",
-            value: 11.8663
-          },
-          {
-            label: "SHAKE128",
-            value: 12.38027
-          },
-          {
-            label: "SHAKE256",
-            value: 12.96572
-          }
-        ]
-      }
-    ];
-    nv.addGraph(function() {
-      var chart = nv.models.multiBarHorizontalChart()
-        .x(function(d) { return d.label; })
-        .y(function(d) { return d.value; })
-        .margin({left: 100, bottom: 75})
-        .barColor(d3.scale.category20().range())
-        .showValues(true)
-        .duration(250)
-        .showControls(false)
-      ;
-      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
-      d3.select("#post-2016-02-06-ae71986a-chart1 svg")
-        .datum(seriesData1)
-        .call(chart);
-      nv.utils.windowResize(chart.update);
-      return chart;
-    });
-    var seriesData2 = [
-      {
-        key: "SHA2",
-        values: [
-          {
-            label: "SHA2/3-224",
-            value: 2.186853
-          },
-          {
-            label: "SHA2/3-256",
-            value: 2.183836
-          },
-          {
-            label: "SHA2/3-384",
-            value: 2.190898
-          },
-          {
-            label: "SHA2/3-512",
-            value: 2.200743
-          }
-        ]
-      },
-      {
-        key: "SHA3",
-        values: [
-          {
-            label: "SHA2/3-224",
-            value: 3.221057
-          },
-          {
-            label: "SHA2/3-256",
-            value: 3.222021
-          },
-          {
-            label: "SHA2/3-384",
-            value: 3.200662
-          },
-          {
-            label: "SHA2/3-512",
-            value: 3.222704
-          },
-          {
-            label: "SHAKE128",
-            value: 3.228499
-          },
-          {
-            label: "SHAKE256",
-            value: 3.257091
-          }
-        ]
-      }
-    ];
-    nv.addGraph(function() {
-      var chart = nv.models.multiBarHorizontalChart()
-        .x(function(d) { return d.label; })
-        .y(function(d) { return d.value; })
-        .margin({left: 100, bottom: 75})
-        .barColor(d3.scale.category20().range())
-        .showValues(true)
-        .duration(250)
-        .showControls(false)
-      ;
-      chart.yAxis.axisLabel('Microseconds (Lower is Better)');
-      d3.select("#post-2016-02-06-ae71986a-chart2 svg")
-        .datum(seriesData2)
-        .call(chart);
-      nv.utils.windowResize(chart.update);
-      return chart;
-    });
-  } else {
-    var chart1Svg = document.querySelector('#post-2016-02-06-ae71986a-chart1 > svg');
-    if (chart1Svg !== null && chart1Svg.style !== null) {
-      chart1Svg.style.display = 'none';
-    }
-    var chart2Svg = document.querySelector('#post-2016-02-06-ae71986a-chart2 > svg');
-    if (chart2Svg !== null && chart2Svg.style !== null) {
-      chart2Svg.style.display = 'none';
-    }
-  }
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+
+s.src = '//potatosalad.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
 })();
 </script>
-
-
-  </div>
-  
-</div>
-
-<p class="rss-subscribe">subscribe <a href="/feed.xml">via RSS</a></p>
-
-<div class="pagination">
-  
-    <span class="pagination-item older">Older</span>
-  
-  
-    <span class="pagination-item newer">Newer</span>
-  
-</div>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 
 
       </div>
