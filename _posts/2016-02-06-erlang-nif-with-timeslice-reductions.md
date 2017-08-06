@@ -2,7 +2,7 @@
 layout: post
 title: Erlang NIF with timeslice reductions
 tags: C Elixir Erlang
-hash: post-2016-02-06-1af8d5a
+hash: post-2016-02-06-ae71986a
 ---
 
 Recently, I put together an Erlang asynchronous port driver named [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) which implements the [SHA-3](https://en.wikipedia.org/wiki/SHA-3) algorithms used in another one of my projects, [jose](https://github.com/potatosalad/erlang-jose).
