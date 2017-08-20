@@ -1,5 +1,199 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="https://potatosalad.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://potatosalad.io/" rel="alternate" type="text/html" /><updated>2017-08-05T22:37:26-06:00</updated><id>https://potatosalad.io/</id><title type="html">potatosalad</title><subtitle>The Development Blog of Andrew Bennett
-</subtitle><author><name>Andrew Bennett</name></author><entry><title type="html">Latency of Native Functions for Erlang and Elixir</title><link href="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html" rel="alternate" type="text/html" title="Latency of Native Functions for Erlang and Elixir" /><published>2017-08-05T00:00:00-06:00</published><updated>2017-08-05T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir</id><content type="html" xml:base="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html">&lt;p&gt;Erlang and C first appeared within 14 years&lt;sup&gt;&lt;a href=&quot;#footnote-post-2017-08-05-b55da7d7-1&quot;&gt;*&lt;/a&gt;&lt;/sup&gt; of one another.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="https://potatosalad.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://potatosalad.io/" rel="alternate" type="text/html" /><updated>2017-08-20T15:45:05-06:00</updated><id>https://potatosalad.io/</id><title type="html">potatosalad</title><subtitle>The Development Blog of Andrew Bennett
+</subtitle><author><name>Andrew Bennett</name></author><entry><title type="html">Load Testing cowboy 2.0.0-rc.1</title><link href="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html" rel="alternate" type="text/html" title="Load Testing cowboy 2.0.0-rc.1" /><published>2017-08-20T00:00:00-06:00</published><updated>2017-08-20T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1</id><content type="html" xml:base="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html">&lt;p&gt;Let’s load test &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1&quot;&gt;cowboy 2.0.0-rc.1&lt;/a&gt; and see how it compares to &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/1.1.2&quot;&gt;cowboy 1.1.2&lt;/a&gt;!&lt;/p&gt;
+
+&lt;h2 id=&quot;setup&quot;&gt;Setup&lt;/h2&gt;
+
+&lt;p&gt;The plan is to use &lt;a href=&quot;https://nghttp2.org/documentation/h2load-howto.html&quot;&gt;h2load&lt;/a&gt; and record the current requests per second while also measuring scheduler utilization.&lt;/p&gt;
+
+&lt;p&gt;Since h2load didn’t support this at the time of writing, there is a custom version available at &lt;a href=&quot;https://github.com/potatosalad/nghttp2/tree/elixirconf2017&quot;&gt;potatosalad/nghttp2@elixirconf2017&lt;/a&gt; which supports printing the current requests per second for a given interval.&lt;/p&gt;
+
+&lt;p&gt;Let’s setup the two versions of cowboy we’re going to test:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/1.1.2&quot;&gt;cowboy 1.1.2&lt;/a&gt; — released 2017-02-06&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1&quot;&gt;cowboy 2.0.0-rc.1&lt;/a&gt; — released 2017-07-24&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; This is not a perfectly fair comparison, as cowboy 1.x is HTTP/1.1 only, while cowboy 2.x supports HTTP/2.&lt;/p&gt;
+
+&lt;h3 id=&quot;cowboy-112&quot;&gt;cowboy 1.1.2&lt;/h3&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;ss&quot;&gt;:cowboy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_http&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;HTTP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;port:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;29593&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;env:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;dispatch:&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cowboy_router&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]}]}])&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;@behaviour&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cowboy_http_handler&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_transport&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:cowboy_req&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;content-type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;text/plain&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Hello world!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;terminate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_reason&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;cowboy-200-rc1&quot;&gt;cowboy 2.0.0-rc.1&lt;/h3&gt;
+
+&lt;h5 id=&quot;cowboy_handler-behaviour&quot;&gt;&lt;a href=&quot;https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;cowboy_handler&lt;/code&gt;&lt;/a&gt; behaviour&lt;/h5&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;ss&quot;&gt;:cowboy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;HTTP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;port:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;29593&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;env:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;dispatch:&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cowboy_router&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]}]}])&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;@behaviour&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cowboy_handler&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:cowboy_req&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;
+        &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;content-type&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;text/plain&quot;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Hello world!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h5 id=&quot;cowboy_stream-behaviour&quot;&gt;&lt;a href=&quot;https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;cowboy_stream&lt;/code&gt;&lt;/a&gt; behaviour&lt;/h5&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;ss&quot;&gt;:cowboy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;HTTP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;port:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;29593&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;env:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;stream_handlers:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;StreamHandler&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Contention&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;StreamHandler&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;@behaviour&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cowboy_stream&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_streamid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_req&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_opts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;commands&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;%{&lt;/span&gt;&lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;content-type&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;text/plain&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}},&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:fin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sd&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;Hello world!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;ss&quot;&gt;:stop&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;commands&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;cowboy 1.x was tested with the following command:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;h2load &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--h1 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--duration&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;300 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--warm-up-time&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1s &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--clients&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;100 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--requests&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;'http://127.0.0.1:29594/'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;cowboy 2.x was tested with the following command:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;h2load &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--duration&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;300 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--warm-up-time&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1s &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--clients&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;100 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--max-concurrent-streams&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--requests&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--window-bits&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;16 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+--connection-window-bits&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;16 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;'http://127.0.0.1:29594/'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The test script used is available here:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/82d2c04338a3b273b6cdb8375d6cc2df4d80f7fa/apps/contention/priv/cowboy2/h2load.escript&quot;&gt;priv/cowboy2/h2load.escript&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;results&quot;&gt;Results&lt;/h2&gt;
+
+&lt;p&gt;First, let’s test cowboy 1.x using h2load in HTTP/1.1 mode.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.1.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.1.svg&quot; alt=&quot;cowboy-1.1.2.1.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Not bad, an average of ~20k req/s and maximum of ~40k req/s.&lt;/p&gt;
+
+&lt;p&gt;Second, let’s test our cowboy 2.x handler using h2load in HTTP/2 mode.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg&quot; alt=&quot;cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;We have a 2x performance gain with an average of ~40k req/s and maximum of ~70k req/s.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/essen&quot;&gt;Loïc Hoguin&lt;/a&gt;, the author of cowboy, mentioned in &lt;a href=&quot;https://github.com/ninenines/cowboy/issues/1169&quot;&gt;this issue&lt;/a&gt; that using the &lt;a href=&quot;https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;cowboy_stream&lt;/code&gt;&lt;/a&gt; behaviour should provide a little extra performance, so let’s test it.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg&quot; alt=&quot;cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Loïc was right!  We gained a 1.5x increase over our handler test and a 3x increase over cowboy 1.x with an average of ~60k req/s and maximum of ~90k req/s.&lt;/p&gt;
+
+&lt;p&gt;A few months ago, I started a &lt;a href=&quot;https://github.com/potatosalad/erlang-h2o&quot;&gt;very unstable experiment&lt;/a&gt; to see if I could create a NIF library that Erlang could use to run a HTTP/2 server using &lt;a href=&quot;https://github.com/h2o/h2o&quot;&gt;libh2o&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I succeeded in creating a &lt;em&gt;very&lt;/em&gt; unstable test setup that can actually have &lt;a href=&quot;https://github.com/potatosalad/elixirconf2017/blob/82d2c04338a3b273b6cdb8375d6cc2df4d80f7fa/apps/contention/lib/contention/h2o/handler.ex&quot;&gt;a module&lt;/a&gt; send responses back to requests received by libh2o.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg&quot; alt=&quot;cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The average of ~280k req/s and maximum of ~400k req/s is pretty consistent with &lt;a href=&quot;https://h2o.examp1e.net/benchmarks.html&quot;&gt;h2o’s benchmark claims&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In a future post, I will explore the causes of the differences.&lt;/p&gt;
+
+&lt;h2 id=&quot;scheduler-utilization&quot;&gt;Scheduler Utilization&lt;/h2&gt;
+
+&lt;p&gt;For the extra curious, below are the measured scheduler utilization graphs for each of the tests.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; My explanations below are currently in “guess”-form and are not based on any hard evidence.  I plan to explore the real reasons for theses numbers in a future post.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.0.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.0.svg&quot; alt=&quot;cowboy-1.1.2.0.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;For the load test on cowboy 1.x, the schedulers are slightly under utilized.  I suspect this is primarily due to the HTTP/1.1 protocol itself where TCP connections are not used nearly as efficiently as in HTTP/2.  The extra time is probably spent waiting on I/O.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-handler.0.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-handler.0.svg&quot; alt=&quot;cowboy-2.0.0-rc.1-handler.0.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;100% scheduler utilization for the duration of the tests.  This is what you might expect to see during a load test.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-stream.0.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-stream.0.svg&quot; alt=&quot;cowboy-2.0.0-rc.1-stream.0.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The stream handler in cowboy 2.x uses a single process per connection.  The previous test, however, uses a single process per stream.  Therefore, the extra 20% of overhead for the previous test may be due to process creation, scheduling, and garbage collection.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/h2o-2.2.0.0.svg&quot;&gt;&lt;img src=&quot;https://potatosalad.io/assets/post-2017-08-20-ac796fcf/h2o-2.2.0.0.svg&quot; alt=&quot;h2o-2.2.0.0.svg&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The h2o implementation uses a single process per server.  As shown in the graph, only ~12% scheduler utilization is indicative of only 1 of the 8 normal schedulers being fully utilized.&lt;/p&gt;
+
+&lt;p&gt;The rest of the work is done by h2o in a single non-scheduler thread event loop.&lt;/p&gt;
+
+&lt;p&gt;In a separate implementation not shown here where I spawned a new process for every request (similar to the cowboy 2.x handler), the overall requests per second dropped to ~90k req/s, which is much closer to the performance of cowboy 2.x.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h2&gt;
+
+&lt;p&gt;cowboy 2.x is roughly 2-3x faster than cowboy 1.x based on the above load tests.&lt;/p&gt;
+
+&lt;p&gt;I am still curious, however, as to whether process-per-request alone is the primary cause for the performance degradation when compared to the ~15x faster results of the makeshift h2o NIF.&lt;/p&gt;</content><author><name>Andrew Bennett</name></author><category term="Elixir" /><category term="Erlang" /><category term="HTTP/2" /><category term="Performance" /><summary type="html">Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!</summary></entry><entry><title type="html">Latency of Native Functions for Erlang and Elixir</title><link href="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html" rel="alternate" type="text/html" title="Latency of Native Functions for Erlang and Elixir" /><published>2017-08-05T00:00:00-06:00</published><updated>2017-08-05T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir</id><content type="html" xml:base="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html">&lt;p&gt;Erlang and C first appeared within 14 years&lt;sup&gt;&lt;a href=&quot;#footnote-post-2017-08-05-b55da7d7-1&quot;&gt;*&lt;/a&gt;&lt;/sup&gt; of one another.&lt;/p&gt;
 
 &lt;p&gt;In the 30+ years together both languages have gone through many changes.  The methods of interoperability have also changed with time.&lt;/p&gt;
 

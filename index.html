@@ -97,6 +97,8 @@
     
       
     
+      
+    
 
     
     <a class="sidebar-nav-item" href="https://github.com/potatosalad"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
@@ -126,6 +128,8 @@
     
       <a class="sidebar-nav-item" href=/tag/performance.html>Performance</a>
     
+      <a class="sidebar-nav-item" href=/tag/http%2F2.html>HTTP/2</a>
+    
   </nav>
 
   <div class="sidebar-item">
@@ -151,7 +155,214 @@
       <div class="container content">
         <div class="posts">
   
-  <div class="post">
+  <div class="post post-2017-08-20-ac796fcf">
+    <h1 class="post-title">
+      <a href="/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html">
+        Load Testing cowboy 2.0.0-rc.1
+      </a>
+    </h1>
+    <span class="post-date">20 Aug, 2017</span>
+    <span class="post-comments"><a href="/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html#disqus_thread"></a></span>
+    <hr>
+    <p>Let’s load test <a href="https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1">cowboy 2.0.0-rc.1</a> and see how it compares to <a href="https://github.com/ninenines/cowboy/releases/tag/1.1.2">cowboy 1.1.2</a>!</p>
+
+<h2 id="setup">Setup</h2>
+
+<p>The plan is to use <a href="https://nghttp2.org/documentation/h2load-howto.html">h2load</a> and record the current requests per second while also measuring scheduler utilization.</p>
+
+<p>Since h2load didn’t support this at the time of writing, there is a custom version available at <a href="https://github.com/potatosalad/nghttp2/tree/elixirconf2017">potatosalad/nghttp2@elixirconf2017</a> which supports printing the current requests per second for a given interval.</p>
+
+<p>Let’s setup the two versions of cowboy we’re going to test:</p>
+
+<ol>
+  <li><a href="https://github.com/ninenines/cowboy/releases/tag/1.1.2">cowboy 1.1.2</a> — released 2017-02-06</li>
+  <li><a href="https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1">cowboy 2.0.0-rc.1</a> — released 2017-07-24</li>
+</ol>
+
+<p><em>Note:</em> This is not a perfectly fair comparison, as cowboy 1.x is HTTP/1.1 only, while cowboy 2.x supports HTTP/2.</p>
+
+<h3 id="cowboy-112">cowboy 1.1.2</h3>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_http</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="m">100</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">[</span>
+  <span class="ss">env:</span> <span class="p">[</span>
+    <span class="ss">dispatch:</span> <span class="ss">:cowboy_router</span><span class="o">.</span><span class="n">compile</span><span class="p">([{</span><span class="ss">:_</span><span class="p">,</span> <span class="p">[{</span><span class="ss">:_</span><span class="p">,</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="p">,</span> <span class="p">[]}]}])</span>
+  <span class="p">]</span>
+<span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
+  <span class="nv">@behaviour</span> <span class="ss">:cowboy_http_handler</span>
+
+  <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_transport</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">handle</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">}</span> <span class="o">=</span>
+      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="m">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">{</span><span class="sd">"</span><span class="s2">content-type"</span><span class="p">,</span> <span class="sd">"</span><span class="s2">text/plain"</span><span class="p">}</span>
+      <span class="p">],</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="n">terminate</span><span class="p">(</span><span class="n">_reason</span><span class="p">,</span> <span class="n">_req</span><span class="p">,</span> <span class="n">_state</span><span class="p">)</span> <span class="k">do</span>
+    <span class="ss">:ok</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h3 id="cowboy-200-rc1">cowboy 2.0.0-rc.1</h3>
+
+<h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">%{</span>
+  <span class="ss">env:</span> <span class="p">%{</span>
+    <span class="ss">dispatch:</span> <span class="ss">:cowboy_router</span><span class="o">.</span><span class="n">compile</span><span class="p">([{</span><span class="ss">:_</span><span class="p">,</span> <span class="p">[{</span><span class="ss">:_</span><span class="p">,</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="p">,</span> <span class="p">[]}]}])</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
+  <span class="nv">@behaviour</span> <span class="ss">:cowboy_handler</span>
+
+  <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">req</span> <span class="o">=</span>
+      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="m">200</span><span class="p">,</span> <span class="p">%{</span>
+        <span class="sd">"</span><span class="s2">content-type"</span> <span class="o">=&gt;</span> <span class="sd">"</span><span class="s2">text/plain"</span>
+      <span class="p">},</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">%{</span>
+  <span class="ss">env:</span> <span class="p">%{</span>
+    <span class="ss">stream_handlers:</span> <span class="p">[</span> <span class="no">Contention</span><span class="o">.</span><span class="no">StreamHandler</span> <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">StreamHandler</span> <span class="k">do</span>
+  <span class="nv">@behaviour</span> <span class="ss">:cowboy_stream</span>
+
+  <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_streamid</span><span class="p">,</span> <span class="n">_req</span><span class="p">,</span> <span class="n">_opts</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">{</span><span class="ss">:headers</span><span class="p">,</span> <span class="m">200</span><span class="p">,</span> <span class="p">%{</span><span class="sd">"</span><span class="s2">content-type"</span> <span class="o">=&gt;</span> <span class="sd">"</span><span class="s2">text/plain"</span><span class="p">}},</span>
+      <span class="p">{</span><span class="ss">:data</span><span class="p">,</span> <span class="ss">:fin</span><span class="p">,</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">},</span>
+      <span class="ss">:stop</span>
+    <span class="p">]</span>
+    <span class="p">{</span><span class="n">commands</span><span class="p">,</span> <span class="no">nil</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>cowboy 1.x was tested with the following command:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>h2load <span class="se">\</span>
+--h1 <span class="se">\</span>
+--duration<span class="o">=</span>300 <span class="se">\</span>
+--warm-up-time<span class="o">=</span>1s <span class="se">\</span>
+--clients<span class="o">=</span>100 <span class="se">\</span>
+--requests<span class="o">=</span>0 <span class="se">\</span>
+<span class="s1">'http://127.0.0.1:29594/'</span>
+</code></pre>
+</div>
+
+<p>cowboy 2.x was tested with the following command:</p>
+
+<div class="language-bash highlighter-rouge"><pre class="highlight"><code>h2load <span class="se">\</span>
+--duration<span class="o">=</span>300 <span class="se">\</span>
+--warm-up-time<span class="o">=</span>1s <span class="se">\</span>
+--clients<span class="o">=</span>100 <span class="se">\</span>
+--max-concurrent-streams<span class="o">=</span>10 <span class="se">\</span>
+--requests<span class="o">=</span>0 <span class="se">\</span>
+--window-bits<span class="o">=</span>16 <span class="se">\</span>
+--connection-window-bits<span class="o">=</span>16 <span class="se">\</span>
+<span class="s1">'http://127.0.0.1:29594/'</span>
+</code></pre>
+</div>
+
+<p>The test script used is available here:</p>
+
+<ul>
+  <li><a href="https://github.com/potatosalad/elixirconf2017/blob/82d2c04338a3b273b6cdb8375d6cc2df4d80f7fa/apps/contention/priv/cowboy2/h2load.escript">priv/cowboy2/h2load.escript</a></li>
+</ul>
+
+<h2 id="results">Results</h2>
+
+<p>First, let’s test cowboy 1.x using h2load in HTTP/1.1 mode.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.1.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.1.svg" alt="cowboy-1.1.2.1.svg" /></a></p>
+
+<p>Not bad, an average of ~20k req/s and maximum of ~40k req/s.</p>
+
+<p>Second, let’s test our cowboy 2.x handler using h2load in HTTP/2 mode.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg" alt="cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg" /></a></p>
+
+<p>We have a 2x performance gain with an average of ~40k req/s and maximum of ~70k req/s.</p>
+
+<p><a href="https://github.com/essen">Loïc Hoguin</a>, the author of cowboy, mentioned in <a href="https://github.com/ninenines/cowboy/issues/1169">this issue</a> that using the <a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour should provide a little extra performance, so let’s test it.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" alt="cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" /></a></p>
+
+<p>Loïc was right!  We gained a 1.5x increase over our handler test and a 3x increase over cowboy 1.x with an average of ~60k req/s and maximum of ~90k req/s.</p>
+
+<p>A few months ago, I started a <a href="https://github.com/potatosalad/erlang-h2o">very unstable experiment</a> to see if I could create a NIF library that Erlang could use to run a HTTP/2 server using <a href="https://github.com/h2o/h2o">libh2o</a>.</p>
+
+<p>I succeeded in creating a <em>very</em> unstable test setup that can actually have <a href="https://github.com/potatosalad/elixirconf2017/blob/82d2c04338a3b273b6cdb8375d6cc2df4d80f7fa/apps/contention/lib/contention/h2o/handler.ex">a module</a> send responses back to requests received by libh2o.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg" alt="cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg" /></a></p>
+
+<p>The average of ~280k req/s and maximum of ~400k req/s is pretty consistent with <a href="https://h2o.examp1e.net/benchmarks.html">h2o’s benchmark claims</a>.</p>
+
+<p>In a future post, I will explore the causes of the differences.</p>
+
+<h2 id="scheduler-utilization">Scheduler Utilization</h2>
+
+<p>For the extra curious, below are the measured scheduler utilization graphs for each of the tests.</p>
+
+<p><em>Note:</em> My explanations below are currently in “guess”-form and are not based on any hard evidence.  I plan to explore the real reasons for theses numbers in a future post.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.0.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2.0.svg" alt="cowboy-1.1.2.0.svg" /></a></p>
+
+<p>For the load test on cowboy 1.x, the schedulers are slightly under utilized.  I suspect this is primarily due to the HTTP/1.1 protocol itself where TCP connections are not used nearly as efficiently as in HTTP/2.  The extra time is probably spent waiting on I/O.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-handler.0.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-handler.0.svg" alt="cowboy-2.0.0-rc.1-handler.0.svg" /></a></p>
+
+<p>100% scheduler utilization for the duration of the tests.  This is what you might expect to see during a load test.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-stream.0.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-2.0.0-rc.1-stream.0.svg" alt="cowboy-2.0.0-rc.1-stream.0.svg" /></a></p>
+
+<p>The stream handler in cowboy 2.x uses a single process per connection.  The previous test, however, uses a single process per stream.  Therefore, the extra 20% of overhead for the previous test may be due to process creation, scheduling, and garbage collection.</p>
+
+<p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/h2o-2.2.0.0.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/h2o-2.2.0.0.svg" alt="h2o-2.2.0.0.svg" /></a></p>
+
+<p>The h2o implementation uses a single process per server.  As shown in the graph, only ~12% scheduler utilization is indicative of only 1 of the 8 normal schedulers being fully utilized.</p>
+
+<p>The rest of the work is done by h2o in a single non-scheduler thread event loop.</p>
+
+<p>In a separate implementation not shown here where I spawned a new process for every request (similar to the cowboy 2.x handler), the overall requests per second dropped to ~90k req/s, which is much closer to the performance of cowboy 2.x.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>cowboy 2.x is roughly 2-3x faster than cowboy 1.x based on the above load tests.</p>
+
+<p>I am still curious, however, as to whether process-per-request alone is the primary cause for the performance degradation when compared to the ~15x faster results of the makeshift h2o NIF.</p>
+
+  </div>
+  
+  <div class="post post-2017-08-05-b55da7d7">
     <h1 class="post-title">
       <a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir.html">
         Latency of Native Functions for Erlang and Elixir
@@ -433,7 +644,7 @@
 
   </div>
   
-  <div class="post">
+  <div class="post post-2016-02-06-ae71986a">
     <h1 class="post-title">
       <a href="/2016/02/06/erlang-nif-with-timeslice-reductions.html">
         Erlang NIF with timeslice reductions
