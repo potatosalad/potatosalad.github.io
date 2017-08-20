@@ -2,7 +2,7 @@
 layout: default
 ---
 
-<div class="post">
+<div class="post {{ page.hash }}">
   <h1 class="post-title">{{ page.title }}</h1>
   <span class="post-date">{{ page.date | date: "%-d %b, %Y" }}</span>
   <span class="post-comments"><a href="{{ post.url | prepend: site.baseurl }}#disqus_thread"></a></span>
