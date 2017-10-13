@@ -1,5 +1,401 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="https://potatosalad.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://potatosalad.io/" rel="alternate" type="text/html" /><updated>2017-08-20T15:49:15-06:00</updated><id>https://potatosalad.io/</id><title type="html">potatosalad</title><subtitle>The Development Blog of Andrew Bennett
-</subtitle><author><name>Andrew Bennett</name></author><entry><title type="html">Load Testing cowboy 2.0.0-rc.1</title><link href="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html" rel="alternate" type="text/html" title="Load Testing cowboy 2.0.0-rc.1" /><published>2017-08-20T00:00:00-06:00</published><updated>2017-08-20T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1</id><content type="html" xml:base="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html">&lt;p&gt;Let’s load test &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1&quot;&gt;cowboy 2.0.0-rc.1&lt;/a&gt; and see how it compares to &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/1.1.2&quot;&gt;cowboy 1.1.2&lt;/a&gt;!&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="https://potatosalad.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://potatosalad.io/" rel="alternate" type="text/html" /><updated>2017-10-13T12:51:53-06:00</updated><id>https://potatosalad.io/</id><title type="html">potatosalad</title><subtitle>The Development Blog of Andrew Bennett
+</subtitle><author><name>Andrew Bennett</name></author><entry><title type="html">Time-Out: Elixir State Machines versus Servers</title><link href="https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers.html" rel="alternate" type="text/html" title="Time-Out: Elixir State Machines versus Servers" /><published>2017-10-13T00:00:00-06:00</published><updated>2017-10-13T00:00:00-06:00</updated><id>https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers</id><content type="html" xml:base="https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers.html">&lt;p&gt;I love &lt;a href=&quot;http://erlang.org/doc/man/gen_statem.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt;&lt;/a&gt; (and the Elixir wrapper &lt;a href=&quot;https://github.com/antipax/gen_state_machine&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_state_machine&lt;/code&gt;&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Prior to the addition of &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; in OTP 19, the decision of when to use &lt;a href=&quot;http://erlang.org/doc/man/gen_server.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt;&lt;/a&gt; and &lt;a href=&quot;http://erlang.org/doc/man/gen_fsm.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_fsm&lt;/code&gt;&lt;/a&gt; was a carefully considered one.  In the vast majority of my use cases, a simple &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt; was the easiest solution; even if it technically was behaving as a state machine.&lt;/p&gt;
+
+&lt;p&gt;Initially, I thought of &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; only as a &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_fsm&lt;/code&gt; replacement and assumed I would rarely need it over using &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Lately, however, I find myself reaching for &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; to solve problems that I would have previously solved with &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt; Try using &lt;a href=&quot;http://erlang.org/doc/man/gen_statem.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt;&lt;/a&gt; instead of &lt;a href=&quot;http://erlang.org/doc/man/gen_server.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt;&lt;/a&gt; (especially if you plan on using &lt;a href=&quot;http://erlang.org/doc/man/erlang.html#start_timer-3&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;:erlang.start_timer/3&lt;/code&gt;&lt;/a&gt;).  You may find it’s a better fit than you think.&lt;/p&gt;
+
+&lt;h2 id=&quot;comparison&quot;&gt;Comparison&lt;/h2&gt;
+
+&lt;p&gt;Quick comparison between &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt;, using the &lt;code class=&quot;highlighter-rouge&quot;&gt;Stack&lt;/code&gt; example in Elixir’s &lt;a href=&quot;https://hexdocs.pm/elixir/GenServer.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;GenServer&lt;/code&gt;&lt;/a&gt; documentation.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; I’m going to use the actual Erlang behaviours instead of Elixir’s &lt;a href=&quot;https://hexdocs.pm/elixir/GenServer.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;GenServer&lt;/code&gt;&lt;/a&gt; and &lt;a href=&quot;https://github.com/antipax/gen_state_machine&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;GenStateMachine&lt;/code&gt;&lt;/a&gt; so that more details are present.&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;StackServer&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;@behaviour&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:reply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:noreply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;item&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Start the server&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;StackServer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# This is the client&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :hello&lt;/span&gt;
+
+&lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:world&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :ok&lt;/span&gt;
+
+&lt;span class=&quot;ss&quot;&gt;:gen_server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :world&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Pretty simple, right?  Let’s see how &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; compares.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; OTP’s &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; has 2 major modes of operation, but for the purpose of this article, only &lt;code class=&quot;highlighter-rouge&quot;&gt;:handle_event_function&lt;/code&gt; will be covered.&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;StackStateMachine&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;@behaviour&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;callback_mode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;:handle_event_function&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:reply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keep_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tail&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keep_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;item&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Start the server&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;StackStateMachine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[])&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# This is the client&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :hello&lt;/span&gt;
+
+&lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:world&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :ok&lt;/span&gt;
+
+&lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; :world&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In this example, the state is &lt;code class=&quot;highlighter-rouge&quot;&gt;nil&lt;/code&gt; and is not used.&lt;/p&gt;
+
+&lt;p&gt;You’ll notice that instead of a &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:reply,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;_,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt; callback tuple as used in &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt;, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.&lt;/p&gt;
+
+&lt;p&gt;Functionally, both examples are equivalent and some may argue that the more concise &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_server&lt;/code&gt; implementation is objectively better than the &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; version.  However, &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; really begins to shine, in my opinion, as more and more complexity is added to the implementation.&lt;/p&gt;
+
+&lt;p&gt;For example:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Should elements of the stack expire over time?&lt;/li&gt;
+  &lt;li&gt;Should certain elements be dropped after a limit has been reached?&lt;/li&gt;
+  &lt;li&gt;If the stack is empty, should the call block until a new item has been pushed?&lt;/li&gt;
+  &lt;li&gt;Should the call queue also expire over time?&lt;/li&gt;
+  &lt;li&gt;What if all of the above is desired?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;time-outs-for-free&quot;&gt;Time-Outs for Free&lt;/h2&gt;
+
+&lt;p&gt;The time-out actions included in &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; are probably my favorite feature, but they took a while for me to understand.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;http://erlang.org/doc/design_principles/statem.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; documentation&lt;/a&gt; is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.&lt;/p&gt;
+
+&lt;p&gt;There are 3 built-in types of time-out actions…&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Time-Out&lt;/th&gt;
+      &lt;th&gt;Cancellation&lt;/th&gt;
+      &lt;th&gt;Cancelled When…&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Event&lt;/td&gt;
+      &lt;td&gt;Automatic&lt;/td&gt;
+      &lt;td&gt;Any event handled&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;State&lt;/td&gt;
+      &lt;td&gt;Automatic/Manual&lt;/td&gt;
+      &lt;td&gt;Reset to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt; or state changes&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Generic&lt;/td&gt;
+      &lt;td&gt;Manual&lt;/td&gt;
+      &lt;td&gt;Reset to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The basic types and syntax for time-outs are as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# Types&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;    &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;    &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generic_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()}&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;generic_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:infinity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;non_neg_integer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@type&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_tuple&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeout_type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeout_term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Event Time-Out Example&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@spec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# State Time-Out Example&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@spec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Generic Time-Out Example&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;@spec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;term&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;To “reset to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt;” for state and generic time-outs, you would simply do…&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# State Time-Out Cancellation&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:infinity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Generic Time-Out Cancellation&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:infinity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;event-time-out&quot;&gt;Event Time-Out&lt;/h3&gt;
+
+&lt;p&gt;I rarely use event time-outs due to their volatility.  &lt;em&gt;Any&lt;/em&gt; event will cancel them.&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## Event Time-Out: Stop after 1 second example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Event Timeout Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:stop&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;There is no way to manually cancel an event time-out.&lt;/p&gt;
+
+&lt;p&gt;Any event handled effectively cancels the time-out…&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## Event Time-Out: Automatic cancellation example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Send a message to myself after 0.5 seconds&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_after&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_event_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Info Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_event_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:keep_state_and_data&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;state-time-out&quot;&gt;State Time-Out&lt;/h3&gt;
+
+&lt;p&gt;State time-outs, however, survive any event that doesn’t reset them or change the state.&lt;/p&gt;
+
+&lt;p&gt;For example: a connection time-out for a socket.  I might set the state to &lt;code class=&quot;highlighter-rouge&quot;&gt;:connecting&lt;/code&gt; and start the connection process which consists of many individual events.  If the state is still &lt;code class=&quot;highlighter-rouge&quot;&gt;:connecting&lt;/code&gt; after 5 seconds, I might want to change the state to &lt;code class=&quot;highlighter-rouge&quot;&gt;:disconnected&lt;/code&gt; and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to &lt;code class=&quot;highlighter-rouge&quot;&gt;:connected&lt;/code&gt;, which would cancel any existing state time-outs.&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## State Time-Out: Stop after 1 second example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# State Timeout Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:stop&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;There are two ways to cancel a state time-out.&lt;/p&gt;
+
+&lt;p&gt;First, setting the state time-out to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt; will cancel the time-out…&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## State Time-Out: Manual cancellation example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Send a message to myself after 0.5 seconds&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_after&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Info Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:infinity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keep_state_and_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Second, changing the state will cancel the time-out…&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## State Time-Out: Automatic cancellation example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Send a message to myself after 0.5 seconds&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_after&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:unstable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Info Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:unstable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:next_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Notice that the initial state was &lt;code class=&quot;highlighter-rouge&quot;&gt;:unstable&lt;/code&gt; and changing to the &lt;code class=&quot;highlighter-rouge&quot;&gt;:stable&lt;/code&gt; state cancelled the state time-out.&lt;/p&gt;
+
+&lt;p&gt;Any other events handled that do not change the state or reset the state time-out will result in a &lt;code class=&quot;highlighter-rouge&quot;&gt;:state_timeout&lt;/code&gt; event.&lt;/p&gt;
+
+&lt;h3 id=&quot;generic-time-out&quot;&gt;Generic Time-Out&lt;/h3&gt;
+
+&lt;p&gt;Generic time-outs survive any events or state changes and must be manually reset to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt; in order to be cancelled.&lt;/p&gt;
+
+&lt;p&gt;For example: a request time-out, building on top of the socket connection time-out from earlier.  At the start of the request, I might set a generic time-out for 30 seconds.  I can then try multiple times to connect and reconnect until the request has actually been sent, but if it is still unsuccessful after 30 seconds, it’s time to cancel the request.&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## Generic Time-Out: Stop after 1 second example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:generic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Generic Timeout Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:generic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:stop&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The only way to cancel a generic time-out is by setting it to &lt;code class=&quot;highlighter-rouge&quot;&gt;:infinity&lt;/code&gt; in the same way that state time-outs may be cancelled…&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;## Generic Time-Out: Manual cancellation example ##&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Send a message to myself after 0.5 seconds&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;send_after&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:erlang&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_generic_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:generic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:stop_after_one_second&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ok&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;@impl&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:gen_statem&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# Info Events&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:cancel_generic_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[{{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:generic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:infinity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keep_state_and_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;my-favorite-mode&quot;&gt;My Favorite Mode&lt;/h2&gt;
+
+&lt;p&gt;My favorite callback mode for &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; is actually &lt;code class=&quot;highlighter-rouge&quot;&gt;[:handle_event_function, :state_enter]&lt;/code&gt;, which I would recommend for anyone who is trying to start using &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt; for problem solving.&lt;/p&gt;
+
+&lt;p&gt;The main benefits of this callback mode are:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Complex State&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;Your state can technically be any term (not just an atom), which opens up some fairly complex possibilities on what can be done with your state machine.&lt;/p&gt;
+
+    &lt;p&gt;For example, instead of just &lt;code class=&quot;highlighter-rouge&quot;&gt;:connected&lt;/code&gt; you might have state as a tuple &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:connected,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:heartbeat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:connected,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:degraded&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;.  You can then pattern match on the state to group together events common to the &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:connected,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt; state.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;State Enter Events&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;By default, state enter events (or transition events) are not emitted by &lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt;, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.&lt;/p&gt;
+
+    &lt;p&gt;For example:&lt;/p&gt;
+
+    &lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:enter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:disconnected&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:disconnected&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+
+    &lt;p&gt;This means that my &lt;code class=&quot;highlighter-rouge&quot;&gt;init/1&lt;/code&gt; callback function returned something like &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:ok,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:disconnected,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;, so &lt;code class=&quot;highlighter-rouge&quot;&gt;:disconnected&lt;/code&gt; is my intial state.&lt;/p&gt;
+
+    &lt;p&gt;I might return a &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:state_timeout,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;0,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt; to immediately attempt a connection and transition to the &lt;code class=&quot;highlighter-rouge&quot;&gt;:connecting&lt;/code&gt; state.  If that fails, I might transition back to the &lt;code class=&quot;highlighter-rouge&quot;&gt;:disconnected&lt;/code&gt; state, which would emit:&lt;/p&gt;
+
+    &lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:enter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:connecting&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:disconnected&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+
+    &lt;p&gt;In this case, I might want to wait for 1 second by returning &lt;code class=&quot;highlighter-rouge&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:state_timeout,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;1000,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt; to delay reconnecting.&lt;/p&gt;
+
+    &lt;p&gt;Typically, I tend to combine these two cases into a single handler:&lt;/p&gt;
+
+    &lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:enter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;old_state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:disconnected&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;old_state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:disconnected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:state_timeout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:keep_state_and_data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;actions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;In general, I have found the aforementioned callback mode to be the most versatile and useful to better solve otherwise complicated problems.&lt;/p&gt;
+
+&lt;p&gt;Hopefully, &lt;a href=&quot;https://hexdocs.pm/gen_state_machine/GenStateMachine.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;GenStateMachine&lt;/code&gt;&lt;/a&gt; will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:&lt;/p&gt;
+
+&lt;div class=&quot;language-elixir highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;defmodule&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;MyStateMachine&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt;
+  &lt;span class=&quot;kn&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;GenStateMachine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;callback_mode:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:handle_event_function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:state_enter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# ...&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Until then, you can use the &lt;a href=&quot;http://erlang.org/doc/man/gen_statem.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_statem&lt;/code&gt;&lt;/a&gt; behaviour directly or add &lt;a href=&quot;https://hex.pm/packages/gen_state_machine&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gen_state_machine&lt;/code&gt;&lt;/a&gt; as a dependency to your mix file.&lt;/p&gt;</content><author><name>Andrew Bennett</name></author><category term="Elixir" /><category term="Erlang" /><category term="gen_statem" /><summary type="html">I love gen_statem (and the Elixir wrapper gen_state_machine).</summary></entry><entry><title type="html">Load Testing cowboy 2.0.0-rc.1</title><link href="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html" rel="alternate" type="text/html" title="Load Testing cowboy 2.0.0-rc.1" /><published>2017-08-20T00:00:00-06:00</published><updated>2017-08-20T00:00:00-06:00</updated><id>https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1</id><content type="html" xml:base="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1.html">&lt;p&gt;Let’s load test &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1&quot;&gt;cowboy 2.0.0-rc.1&lt;/a&gt; and see how it compares to &lt;a href=&quot;https://github.com/ninenines/cowboy/releases/tag/1.1.2&quot;&gt;cowboy 1.1.2&lt;/a&gt;!&lt;/p&gt;
 
 &lt;h2 id=&quot;setup&quot;&gt;Setup&lt;/h2&gt;
 

@@ -99,6 +99,8 @@
     
       
     
+      
+    
 
     
     <a class="sidebar-nav-item" href="https://github.com/potatosalad"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
@@ -130,6 +132,8 @@
     
       <a class="sidebar-nav-item" href=/tag/http%2F2.html>HTTP/2</a>
     
+      <a class="sidebar-nav-item" href=/tag/gen_statem.html>gen_statem</a>
+    
   </nav>
 
   <div class="sidebar-item">
@@ -154,6 +158,415 @@
 
       <div class="container content">
         <div class="posts">
+  
+  <div class="post post-2017-10-13-ad9a120f">
+    <h1 class="post-title">
+      <a href="/2017/10/13/time-out-elixir-state-machines-versus-servers.html">
+        Time-Out: Elixir State Machines versus Servers
+      </a>
+    </h1>
+    <span class="post-date">13 Oct, 2017</span>
+    <span class="post-comments"><a href="/2017/10/13/time-out-elixir-state-machines-versus-servers.html#disqus_thread"></a></span>
+    <hr>
+    <p>I love <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> (and the Elixir wrapper <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a>).</p>
+
+<p>Prior to the addition of <code class="highlighter-rouge">gen_statem</code> in OTP 19, the decision of when to use <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> and <a href="http://erlang.org/doc/man/gen_fsm.html"><code class="highlighter-rouge">gen_fsm</code></a> was a carefully considered one.  In the vast majority of my use cases, a simple <code class="highlighter-rouge">gen_server</code> was the easiest solution; even if it technically was behaving as a state machine.</p>
+
+<p>Initially, I thought of <code class="highlighter-rouge">gen_statem</code> only as a <code class="highlighter-rouge">gen_fsm</code> replacement and assumed I would rarely need it over using <code class="highlighter-rouge">gen_server</code>.</p>
+
+<p>Lately, however, I find myself reaching for <code class="highlighter-rouge">gen_statem</code> to solve problems that I would have previously solved with <code class="highlighter-rouge">gen_server</code>.</p>
+
+<p><strong>TL;DR</strong> Try using <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> instead of <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> (especially if you plan on using <a href="http://erlang.org/doc/man/erlang.html#start_timer-3"><code class="highlighter-rouge">:erlang.start_timer/3</code></a>).  You may find it’s a better fit than you think.</p>
+
+<h2 id="comparison">Comparison</h2>
+
+<p>Quick comparison between <code class="highlighter-rouge">gen_server</code> and <code class="highlighter-rouge">gen_statem</code>, using the <code class="highlighter-rouge">Stack</code> example in Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> documentation.</p>
+
+<p><em>Note:</em> I’m going to use the actual Erlang behaviours instead of Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> and <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">GenStateMachine</code></a> so that more details are present.</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackServer</span> <span class="k">do</span>
+  <span class="nv">@behaviour</span> <span class="ss">:gen_server</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_server</span>
+  <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">data</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_server</span>
+  <span class="k">def</span> <span class="n">handle_call</span><span class="p">(</span><span class="ss">:pop</span><span class="p">,</span> <span class="n">_from</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">])</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:reply</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_server</span>
+  <span class="k">def</span> <span class="n">handle_cast</span><span class="p">({</span><span class="ss">:push</span><span class="p">,</span> <span class="n">item</span><span class="p">},</span> <span class="n">data</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:noreply</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span> <span class="o">|</span> <span class="n">data</span><span class="p">]}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># Start the server</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">pid</span><span class="p">}</span> <span class="o">=</span> <span class="ss">:gen_server</span><span class="o">.</span><span class="n">start_link</span><span class="p">(</span><span class="no">StackServer</span><span class="p">,</span> <span class="p">[</span><span class="ss">:hello</span><span class="p">],</span> <span class="p">[])</span>
+
+<span class="c1"># This is the client</span>
+<span class="ss">:gen_server</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:pop</span><span class="p">)</span>
+<span class="c1">#=&gt; :hello</span>
+
+<span class="ss">:gen_server</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:push</span><span class="p">,</span> <span class="ss">:world</span><span class="p">})</span>
+<span class="c1">#=&gt; :ok</span>
+
+<span class="ss">:gen_server</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:pop</span><span class="p">)</span>
+<span class="c1">#=&gt; :world</span>
+</code></pre>
+</div>
+
+<p>Pretty simple, right?  Let’s see how <code class="highlighter-rouge">gen_statem</code> compares.</p>
+
+<p><em>Note:</em> OTP’s <code class="highlighter-rouge">gen_statem</code> has 2 major modes of operation, but for the purpose of this article, only <code class="highlighter-rouge">:handle_event_function</code> will be covered.</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackStateMachine</span> <span class="k">do</span>
+  <span class="nv">@behaviour</span> <span class="ss">:gen_statem</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+  <span class="k">def</span> <span class="n">callback_mode</span><span class="p">()</span> <span class="k">do</span>
+    <span class="ss">:handle_event_function</span>
+  <span class="k">end</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+  <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">data</span><span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+  <span class="k">def</span> <span class="n">handle_event</span><span class="p">({</span><span class="ss">:call</span><span class="p">,</span> <span class="n">from</span><span class="p">},</span> <span class="ss">:pop</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">])</span> <span class="k">do</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:reply</span><span class="p">,</span> <span class="n">from</span><span class="p">,</span> <span class="n">head</span><span class="p">}]</span>
+    <span class="p">{</span><span class="ss">:keep_state</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+  <span class="k">end</span>
+  <span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:cast</span><span class="p">,</span> <span class="p">{</span><span class="ss">:push</span><span class="p">,</span> <span class="n">item</span><span class="p">},</span> <span class="n">_state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="k">do</span>
+    <span class="p">{</span><span class="ss">:keep_state</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span> <span class="o">|</span> <span class="n">data</span><span class="p">]}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># Start the server</span>
+<span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">pid</span><span class="p">}</span> <span class="o">=</span> <span class="ss">:gen_statem</span><span class="o">.</span><span class="n">start_link</span><span class="p">(</span><span class="no">StackStateMachine</span><span class="p">,</span> <span class="p">[</span><span class="ss">:hello</span><span class="p">],</span> <span class="p">[])</span>
+
+<span class="c1"># This is the client</span>
+<span class="ss">:gen_statem</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:pop</span><span class="p">)</span>
+<span class="c1">#=&gt; :hello</span>
+
+<span class="ss">:gen_statem</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="p">{</span><span class="ss">:push</span><span class="p">,</span> <span class="ss">:world</span><span class="p">})</span>
+<span class="c1">#=&gt; :ok</span>
+
+<span class="ss">:gen_statem</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="ss">:pop</span><span class="p">)</span>
+<span class="c1">#=&gt; :world</span>
+</code></pre>
+</div>
+
+<p>In this example, the state is <code class="highlighter-rouge">nil</code> and is not used.</p>
+
+<p>You’ll notice that instead of a <code class="highlighter-rouge"><span class="p">{</span><span class="err">:reply,</span><span class="w"> </span><span class="err">_,</span><span class="w"> </span><span class="err">_</span><span class="p">}</span></code> callback tuple as used in <code class="highlighter-rouge">gen_server</code>, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.</p>
+
+<p>Functionally, both examples are equivalent and some may argue that the more concise <code class="highlighter-rouge">gen_server</code> implementation is objectively better than the <code class="highlighter-rouge">gen_statem</code> version.  However, <code class="highlighter-rouge">gen_statem</code> really begins to shine, in my opinion, as more and more complexity is added to the implementation.</p>
+
+<p>For example:</p>
+
+<ul>
+  <li>Should elements of the stack expire over time?</li>
+  <li>Should certain elements be dropped after a limit has been reached?</li>
+  <li>If the stack is empty, should the call block until a new item has been pushed?</li>
+  <li>Should the call queue also expire over time?</li>
+  <li>What if all of the above is desired?</li>
+</ul>
+
+<h2 id="time-outs-for-free">Time-Outs for Free</h2>
+
+<p>The time-out actions included in <code class="highlighter-rouge">gen_statem</code> are probably my favorite feature, but they took a while for me to understand.</p>
+
+<p>The <a href="http://erlang.org/doc/design_principles/statem.html"><code class="highlighter-rouge">gen_statem</code> documentation</a> is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.</p>
+
+<p>There are 3 built-in types of time-out actions…</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Time-Out</th>
+      <th>Cancellation</th>
+      <th>Cancelled When…</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Event</td>
+      <td>Automatic</td>
+      <td>Any event handled</td>
+    </tr>
+    <tr>
+      <td>State</td>
+      <td>Automatic/Manual</td>
+      <td>Reset to <code class="highlighter-rouge">:infinity</code> or state changes</td>
+    </tr>
+    <tr>
+      <td>Generic</td>
+      <td>Manual</td>
+      <td>Reset to <code class="highlighter-rouge">:infinity</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The basic types and syntax for time-outs are as follows:</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1"># Types</span>
+<span class="nv">@type</span> <span class="n">event_type</span><span class="p">()</span>    <span class="p">::</span> <span class="ss">:timeout</span>
+<span class="nv">@type</span> <span class="n">state_type</span><span class="p">()</span>    <span class="p">::</span> <span class="ss">:state_timeout</span>
+<span class="nv">@type</span> <span class="n">generic_type</span><span class="p">()</span>  <span class="p">::</span> <span class="p">{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="n">term</span><span class="p">()}</span>
+
+<span class="nv">@type</span> <span class="n">timeout_type</span><span class="p">()</span>  <span class="p">::</span> <span class="n">event_type</span><span class="p">()</span> <span class="o">|</span> <span class="n">state_type</span><span class="p">()</span> <span class="o">|</span> <span class="n">generic_type</span><span class="p">()</span>
+<span class="nv">@type</span> <span class="n">timeout_time</span><span class="p">()</span>  <span class="p">::</span> <span class="ss">:infinity</span> <span class="o">|</span> <span class="n">non_neg_integer</span><span class="p">()</span>
+<span class="nv">@type</span> <span class="n">timeout_term</span><span class="p">()</span>  <span class="p">::</span> <span class="n">term</span><span class="p">()</span>
+
+<span class="nv">@type</span> <span class="n">timeout_tuple</span><span class="p">()</span> <span class="p">::</span> <span class="p">{</span><span class="n">timeout_type</span><span class="p">(),</span> <span class="n">timeout_time</span><span class="p">(),</span> <span class="n">timeout_term</span><span class="p">()}</span>
+
+<span class="c1"># Event Time-Out Example</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:any</span><span class="p">}]</span>
+<span class="nv">@spec</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">,</span> <span class="n">state</span> <span class="p">::</span> <span class="n">term</span><span class="p">(),</span> <span class="n">data</span> <span class="p">::</span> <span class="n">term</span><span class="p">())</span>
+
+<span class="c1"># State Time-Out Example</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:any</span><span class="p">}]</span>
+<span class="nv">@spec</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">,</span> <span class="n">state</span> <span class="p">::</span> <span class="n">term</span><span class="p">(),</span> <span class="n">data</span> <span class="p">::</span> <span class="n">term</span><span class="p">())</span>
+
+<span class="c1"># Generic Time-Out Example</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[{{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">},</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:any</span><span class="p">}]</span>
+<span class="nv">@spec</span> <span class="n">handle_event</span><span class="p">({</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">},</span> <span class="ss">:any</span><span class="p">,</span> <span class="n">state</span> <span class="p">::</span> <span class="n">term</span><span class="p">(),</span> <span class="n">data</span> <span class="p">::</span> <span class="n">term</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<p>To “reset to <code class="highlighter-rouge">:infinity</code>” for state and generic time-outs, you would simply do…</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1"># State Time-Out Cancellation</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
+<span class="c1"># Generic Time-Out Cancellation</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">[{{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">},</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
+</code></pre>
+</div>
+
+<h3 id="event-time-out">Event Time-Out</h3>
+
+<p>I rarely use event time-outs due to their volatility.  <em>Any</em> event will cancel them.</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## Event Time-Out: Stop after 1 second example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Event Timeout Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:stop</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>There is no way to manually cancel an event time-out.</p>
+
+<p>Any event handled effectively cancels the time-out…</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## Event Time-Out: Automatic cancellation example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="c1"># Send a message to myself after 0.5 seconds</span>
+  <span class="n">_</span> <span class="o">=</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">send_after</span><span class="p">(</span><span class="m">500</span><span class="p">,</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:cancel_event_timeout</span><span class="p">)</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Info Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:info</span><span class="p">,</span> <span class="ss">:cancel_event_timeout</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:keep_state_and_data</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h3 id="state-time-out">State Time-Out</h3>
+
+<p>State time-outs, however, survive any event that doesn’t reset them or change the state.</p>
+
+<p>For example: a connection time-out for a socket.  I might set the state to <code class="highlighter-rouge">:connecting</code> and start the connection process which consists of many individual events.  If the state is still <code class="highlighter-rouge">:connecting</code> after 5 seconds, I might want to change the state to <code class="highlighter-rouge">:disconnected</code> and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to <code class="highlighter-rouge">:connected</code>, which would cancel any existing state time-outs.</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## State Time-Out: Stop after 1 second example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># State Timeout Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:stop</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>There are two ways to cancel a state time-out.</p>
+
+<p>First, setting the state time-out to <code class="highlighter-rouge">:infinity</code> will cancel the time-out…</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## State Time-Out: Manual cancellation example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="c1"># Send a message to myself after 0.5 seconds</span>
+  <span class="n">_</span> <span class="o">=</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">send_after</span><span class="p">(</span><span class="m">500</span><span class="p">,</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:cancel_state_timeout</span><span class="p">)</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Info Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:info</span><span class="p">,</span> <span class="ss">:cancel_state_timeout</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:keep_state_and_data</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>Second, changing the state will cancel the time-out…</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## State Time-Out: Automatic cancellation example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="c1"># Send a message to myself after 0.5 seconds</span>
+  <span class="n">_</span> <span class="o">=</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">send_after</span><span class="p">(</span><span class="m">500</span><span class="p">,</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:cancel_state_timeout</span><span class="p">)</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="ss">:unstable</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Info Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:info</span><span class="p">,</span> <span class="ss">:cancel_state_timeout</span><span class="p">,</span> <span class="ss">:unstable</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="p">{</span><span class="ss">:next_state</span><span class="p">,</span> <span class="ss">:stable</span><span class="p">,</span> <span class="n">data</span><span class="p">}</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>Notice that the initial state was <code class="highlighter-rouge">:unstable</code> and changing to the <code class="highlighter-rouge">:stable</code> state cancelled the state time-out.</p>
+
+<p>Any other events handled that do not change the state or reset the state time-out will result in a <code class="highlighter-rouge">:state_timeout</code> event.</p>
+
+<h3 id="generic-time-out">Generic Time-Out</h3>
+
+<p>Generic time-outs survive any events or state changes and must be manually reset to <code class="highlighter-rouge">:infinity</code> in order to be cancelled.</p>
+
+<p>For example: a request time-out, building on top of the socket connection time-out from earlier.  At the start of the request, I might set a generic time-out for 30 seconds.  I can then try multiple times to connect and reconnect until the request has actually been sent, but if it is still unsuccessful after 30 seconds, it’s time to cancel the request.</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## Generic Time-Out: Stop after 1 second example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:generic</span><span class="p">},</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Generic Timeout Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">({</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:generic</span><span class="p">},</span> <span class="ss">:stop_after_one_second</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="ss">:stop</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>The only way to cancel a generic time-out is by setting it to <code class="highlighter-rouge">:infinity</code> in the same way that state time-outs may be cancelled…</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="c1">## Generic Time-Out: Manual cancellation example ##</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">do</span>
+  <span class="c1"># Send a message to myself after 0.5 seconds</span>
+  <span class="n">_</span> <span class="o">=</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">send_after</span><span class="p">(</span><span class="m">500</span><span class="p">,</span> <span class="ss">:erlang</span><span class="o">.</span><span class="n">self</span><span class="p">(),</span> <span class="ss">:cancel_generic_timeout</span><span class="p">)</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:generic</span><span class="p">},</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:stop_after_one_second</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="nv">@impl</span> <span class="ss">:gen_statem</span>
+<span class="c1"># Info Events</span>
+<span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:info</span><span class="p">,</span> <span class="ss">:cancel_generic_timeout</span><span class="p">,</span> <span class="n">_state</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span> <span class="p">[{{</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:generic</span><span class="p">},</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
+  <span class="p">{</span><span class="ss">:keep_state_and_data</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<h2 id="my-favorite-mode">My Favorite Mode</h2>
+
+<p>My favorite callback mode for <code class="highlighter-rouge">gen_statem</code> is actually <code class="highlighter-rouge">[:handle_event_function, :state_enter]</code>, which I would recommend for anyone who is trying to start using <code class="highlighter-rouge">gen_statem</code> for problem solving.</p>
+
+<p>The main benefits of this callback mode are:</p>
+
+<ol>
+  <li>
+    <p><strong>Complex State</strong></p>
+
+    <p>Your state can technically be any term (not just an atom), which opens up some fairly complex possibilities on what can be done with your state machine.</p>
+
+    <p>For example, instead of just <code class="highlighter-rouge">:connected</code> you might have state as a tuple <code class="highlighter-rouge"><span class="p">{</span><span class="err">:connected,</span><span class="w"> </span><span class="err">:heartbeat</span><span class="p">}</span></code> or <code class="highlighter-rouge"><span class="p">{</span><span class="err">:connected,</span><span class="w"> </span><span class="err">:degraded</span><span class="p">}</span></code>.  You can then pattern match on the state to group together events common to the <code class="highlighter-rouge"><span class="p">{</span><span class="err">:connected,</span><span class="w"> </span><span class="err">_</span><span class="p">}</span></code> state.</p>
+  </li>
+  <li>
+    <p><strong>State Enter Events</strong></p>
+
+    <p>By default, state enter events (or transition events) are not emitted by <code class="highlighter-rouge">gen_statem</code>, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.</p>
+
+    <p>For example:</p>
+
+    <div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
+</code></pre>
+    </div>
+
+    <p>This means that my <code class="highlighter-rouge">init/1</code> callback function returned something like <code class="highlighter-rouge"><span class="p">{</span><span class="err">:ok,</span><span class="w"> </span><span class="err">:disconnected,</span><span class="w"> </span><span class="err">data</span><span class="p">}</span></code>, so <code class="highlighter-rouge">:disconnected</code> is my intial state.</p>
+
+    <p>I might return a <code class="highlighter-rouge"><span class="p">{</span><span class="err">:state_timeout,</span><span class="w"> </span><span class="err">0,</span><span class="w"> </span><span class="err">:connect</span><span class="p">}</span></code> to immediately attempt a connection and transition to the <code class="highlighter-rouge">:connecting</code> state.  If that fails, I might transition back to the <code class="highlighter-rouge">:disconnected</code> state, which would emit:</p>
+
+    <div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:connecting</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
+</code></pre>
+    </div>
+
+    <p>In this case, I might want to wait for 1 second by returning <code class="highlighter-rouge"><span class="p">{</span><span class="err">:state_timeout,</span><span class="w"> </span><span class="err">1000,</span><span class="w"> </span><span class="err">:connect</span><span class="p">}</span></code> to delay reconnecting.</p>
+
+    <p>Typically, I tend to combine these two cases into a single handler:</p>
+
+    <div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="n">old_state</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">actions</span> <span class="o">=</span>
+    <span class="k">if</span> <span class="n">old_state</span> <span class="o">==</span> <span class="ss">:disconnected</span> <span class="k">do</span>
+      <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="ss">:connect</span><span class="p">}]</span>
+    <span class="k">else</span>
+      <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="m">1000</span><span class="p">,</span> <span class="ss">:connect</span><span class="p">}]</span>
+    <span class="k">end</span>
+  <span class="p">{</span><span class="ss">:keep_state_and_data</span><span class="p">,</span> <span class="n">actions</span><span class="p">}</span>
+<span class="k">end</span>
+</code></pre>
+    </div>
+  </li>
+</ol>
+
+<p>In general, I have found the aforementioned callback mode to be the most versatile and useful to better solve otherwise complicated problems.</p>
+
+<p>Hopefully, <a href="https://hexdocs.pm/gen_state_machine/GenStateMachine.html"><code class="highlighter-rouge">GenStateMachine</code></a> will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:</p>
+
+<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyStateMachine</span> <span class="k">do</span>
+  <span class="kn">use</span> <span class="no">GenStateMachine</span><span class="p">,</span> <span class="ss">callback_mode:</span> <span class="p">[</span><span class="ss">:handle_event_function</span><span class="p">,</span> <span class="ss">:state_enter</span><span class="p">]</span>
+
+  <span class="c1"># ...</span>
+<span class="k">end</span>
+</code></pre>
+</div>
+
+<p>Until then, you can use the <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> behaviour directly or add <a href="https://hex.pm/packages/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a> as a dependency to your mix file.</p>
+
+  </div>
   
   <div class="post post-2017-08-20-ac796fcf">
     <h1 class="post-title">
