@@ -27,5 +27,6 @@ layout: default
     {% endfor %}
   </ul>
 </div>
-
-{% include comments.html %}
+{% if jekyll.environment == "production" %}
+  {% include disqus.html %}
+{% endif %}

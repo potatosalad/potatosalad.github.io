@@ -43,7 +43,7 @@
           checkbox.checked = false;
         }, false);
       })(document);
-    </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    </script>{% if jekyll.environment == "production" %}
+    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>{% endif %}
   </body>
 </html>
