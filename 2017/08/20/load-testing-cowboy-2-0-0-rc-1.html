@@ -26,8 +26,9 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.2.3 -->
+  <!-- Begin Jekyll SEO tag v2.6.1 -->
 <title>Load Testing cowboy 2.0.0-rc.1 | potatosalad</title>
+<meta name="generator" content="Jekyll v4.0.0" />
 <meta property="og:title" content="Load Testing cowboy 2.0.0-rc.1" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
@@ -37,9 +38,9 @@
 <meta property="og:url" content="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1" />
 <meta property="og:site_name" content="potatosalad" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2017-08-20T00:00:00-06:00" />
+<meta property="article:published_time" content="2017-08-20T00:00:00-05:00" />
 <script type="application/ld+json">
-{"@context":"http://schema.org","@type":"BlogPosting","headline":"Load Testing cowboy 2.0.0-rc.1","author":{"@type":"Person","name":"Andrew Bennett"},"datePublished":"2017-08-20T00:00:00-06:00","dateModified":"2017-08-20T00:00:00-06:00","description":"Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"},"url":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"}</script>
+{"datePublished":"2017-08-20T00:00:00-05:00","dateModified":"2017-08-20T00:00:00-05:00","url":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"},"author":{"@type":"Person","name":"Andrew Bennett"},"description":"Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!","headline":"Load Testing cowboy 2.0.0-rc.1","@type":"BlogPosting","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -140,7 +141,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2017. All rights reserved.
+      &copy; 2019. All rights reserved.
     </p>
   </div>
 </div>
@@ -183,15 +184,14 @@
 
 <h3 id="cowboy-112">cowboy 1.1.2</h3>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_http</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="m">100</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">[</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_http</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">[</span>
   <span class="ss">env:</span> <span class="p">[</span>
     <span class="ss">dispatch:</span> <span class="ss">:cowboy_router</span><span class="o">.</span><span class="n">compile</span><span class="p">([{</span><span class="ss">:_</span><span class="p">,</span> <span class="p">[{</span><span class="ss">:_</span><span class="p">,</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="p">,</span> <span class="p">[]}]}])</span>
   <span class="p">]</span>
 <span class="p">])</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:cowboy_http_handler</span>
 
   <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_transport</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span> <span class="k">do</span>
@@ -200,9 +200,9 @@
 
   <span class="k">def</span> <span class="n">handle</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span> <span class="k">do</span>
     <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">}</span> <span class="o">=</span>
-      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="m">200</span><span class="p">,</span> <span class="p">[</span>
-        <span class="p">{</span><span class="sd">"</span><span class="s2">content-type"</span><span class="p">,</span> <span class="sd">"</span><span class="s2">text/plain"</span><span class="p">}</span>
-      <span class="p">],</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">"text/plain"</span><span class="p">}</span>
+      <span class="p">],</span> <span class="s2">"Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
     <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">state</span><span class="p">}</span>
   <span class="k">end</span>
 
@@ -210,52 +210,48 @@
     <span class="ss">:ok</span>
   <span class="k">end</span>
 <span class="k">end</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="cowboy-200-rc1">cowboy 2.0.0-rc.1</h3>
 
 <h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">%{</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
     <span class="ss">dispatch:</span> <span class="ss">:cowboy_router</span><span class="o">.</span><span class="n">compile</span><span class="p">([{</span><span class="ss">:_</span><span class="p">,</span> <span class="p">[{</span><span class="ss">:_</span><span class="p">,</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="p">,</span> <span class="p">[]}]}])</span>
   <span class="p">}</span>
 <span class="p">})</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:cowboy_handler</span>
 
   <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">)</span> <span class="k">do</span>
     <span class="n">req</span> <span class="o">=</span>
-      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="m">200</span><span class="p">,</span> <span class="p">%{</span>
-        <span class="sd">"</span><span class="s2">content-type"</span> <span class="o">=&gt;</span> <span class="sd">"</span><span class="s2">text/plain"</span>
-      <span class="p">},</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+      <span class="ss">:cowboy_req</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">%{</span>
+        <span class="s2">"content-type"</span> <span class="o">=&gt;</span> <span class="s2">"text/plain"</span>
+      <span class="p">},</span> <span class="s2">"Hello world!"</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
     <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opts</span><span class="p">}</span>
   <span class="k">end</span>
 <span class="k">end</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="m">29593</span> <span class="p">],</span> <span class="p">%{</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
     <span class="ss">stream_handlers:</span> <span class="p">[</span> <span class="no">Contention</span><span class="o">.</span><span class="no">StreamHandler</span> <span class="p">]</span>
   <span class="p">}</span>
 <span class="p">})</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<div class="language-elixir highlighter-rouge"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">StreamHandler</span> <span class="k">do</span>
+<div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">Contention</span><span class="o">.</span><span class="no">StreamHandler</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:cowboy_stream</span>
 
   <span class="k">def</span> <span class="n">init</span><span class="p">(</span><span class="n">_streamid</span><span class="p">,</span> <span class="n">_req</span><span class="p">,</span> <span class="n">_opts</span><span class="p">)</span> <span class="k">do</span>
     <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
-      <span class="p">{</span><span class="ss">:headers</span><span class="p">,</span> <span class="m">200</span><span class="p">,</span> <span class="p">%{</span><span class="sd">"</span><span class="s2">content-type"</span> <span class="o">=&gt;</span> <span class="sd">"</span><span class="s2">text/plain"</span><span class="p">}},</span>
-      <span class="p">{</span><span class="ss">:data</span><span class="p">,</span> <span class="ss">:fin</span><span class="p">,</span> <span class="sd">"</span><span class="s2">Hello world!"</span><span class="p">},</span>
+      <span class="p">{</span><span class="ss">:headers</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="p">%{</span><span class="s2">"content-type"</span> <span class="o">=&gt;</span> <span class="s2">"text/plain"</span><span class="p">}},</span>
+      <span class="p">{</span><span class="ss">:data</span><span class="p">,</span> <span class="ss">:fin</span><span class="p">,</span> <span class="s2">"Hello world!"</span><span class="p">},</span>
       <span class="ss">:stop</span>
     <span class="p">]</span>
     <span class="p">{</span><span class="n">commands</span><span class="p">,</span> <span class="no">nil</span><span class="p">}</span>
@@ -263,34 +259,31 @@
 
   <span class="c1"># ...</span>
 <span class="k">end</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>cowboy 1.x was tested with the following command:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>h2load <span class="se">\</span>
---h1 <span class="se">\</span>
---duration<span class="o">=</span>300 <span class="se">\</span>
---warm-up-time<span class="o">=</span>1s <span class="se">\</span>
---clients<span class="o">=</span>100 <span class="se">\</span>
---requests<span class="o">=</span>0 <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>h2load <span class="se">\</span>
+<span class="nt">--h1</span> <span class="se">\</span>
+<span class="nt">--duration</span><span class="o">=</span>300 <span class="se">\</span>
+<span class="nt">--warm-up-time</span><span class="o">=</span>1s <span class="se">\</span>
+<span class="nt">--clients</span><span class="o">=</span>100 <span class="se">\</span>
+<span class="nt">--requests</span><span class="o">=</span>0 <span class="se">\</span>
 <span class="s1">'http://127.0.0.1:29594/'</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>cowboy 2.x was tested with the following command:</p>
 
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>h2load <span class="se">\</span>
---duration<span class="o">=</span>300 <span class="se">\</span>
---warm-up-time<span class="o">=</span>1s <span class="se">\</span>
---clients<span class="o">=</span>100 <span class="se">\</span>
---max-concurrent-streams<span class="o">=</span>10 <span class="se">\</span>
---requests<span class="o">=</span>0 <span class="se">\</span>
---window-bits<span class="o">=</span>16 <span class="se">\</span>
---connection-window-bits<span class="o">=</span>16 <span class="se">\</span>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>h2load <span class="se">\</span>
+<span class="nt">--duration</span><span class="o">=</span>300 <span class="se">\</span>
+<span class="nt">--warm-up-time</span><span class="o">=</span>1s <span class="se">\</span>
+<span class="nt">--clients</span><span class="o">=</span>100 <span class="se">\</span>
+<span class="nt">--max-concurrent-streams</span><span class="o">=</span>10 <span class="se">\</span>
+<span class="nt">--requests</span><span class="o">=</span>0 <span class="se">\</span>
+<span class="nt">--window-bits</span><span class="o">=</span>16 <span class="se">\</span>
+<span class="nt">--connection-window-bits</span><span class="o">=</span>16 <span class="se">\</span>
 <span class="s1">'http://127.0.0.1:29594/'</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The test script used is available here:</p>
 
