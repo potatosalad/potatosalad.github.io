@@ -43,5 +43,6 @@ bower_components
 .tmp/
 
 # Jekyll generated files
+.jekyll-cache
 .jekyll-metadata
 .sass-cache

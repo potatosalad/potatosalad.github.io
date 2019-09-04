@@ -27,7 +27,7 @@ permalink: /:categories/:year/:month/:day/:title
 # Build settings
 markdown: kramdown
 # theme: lanyon
-gems:
+plugins:
   - jekyll-compose
   - jekyll-feed
   - jekyll-paginate
@@ -53,10 +53,13 @@ version: 1.0.0
 # The following items will not be processed, by default. Create a custom list
 # to override the default setting.
 exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
   - Gemfile
   - Gemfile.lock
   - LICENSE.md
-  - node_modules
+  - node_modules/
   - Rakefile
   - README.md
   - util/
