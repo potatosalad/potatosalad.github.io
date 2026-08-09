@@ -44,13 +44,14 @@ function highlightDocument(source) {
 
     const languageClass = classes(node).find((name) => name.startsWith('language-'))
     const flag = languageClass?.slice('language-'.length)
+    const plainText = flag === 'text' || flag === 'plaintext' || flag === 'txt'
     const scope = flag && starryNight.flagToScope(flag)
     const pre = node.parentNode
 
-    if (!scope || !pre.sourceCodeLocation) return
+    if ((!scope && !plainText) || !pre.sourceCodeLocation) return
 
     const value = textContent(node)
-    const highlighted = toHtml(starryNight.highlight(value, scope))
+    const highlighted = scope ? toHtml(starryNight.highlight(value, scope)) : escapeHtml(value)
     const lineCount = Math.max(1, value.endsWith('\n') ? value.split('\n').length - 1 : value.split('\n').length)
     const lineNumbers = Array.from({length: lineCount}, (_, index) => index + 1).join('\n')
     const safeFlag = escapeAttribute(flag)
