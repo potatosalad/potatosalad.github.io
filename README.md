@@ -1,6 +1,7 @@
 # potatosalad.io
 
-Andrew Bennett's Jekyll blog, published at <https://potatosalad.io>.
+Andrew Bennett's Jekyll blog, published at <https://potatosalad.io>, using the
+[Chirpy](https://github.com/cotes2020/jekyll-theme-chirpy) theme.
 
 The project is intentionally containerized: Ruby, Bundler, Jekyll, native build tools, Git, SSH, GnuPG, and `rsync` live in the image rather than on the host.
 
@@ -40,4 +41,7 @@ The recipe mounts the host's `~/.ssh` and `~/.gitconfig` read-only so the contai
 
 ## Disqus
 
-Posts retain their historical `hash` front-matter values as stable Disqus identifiers. Both comment-count links and the embedded thread use that identifier; changing or removing it can split an existing discussion into a new thread.
+Posts retain their historical `hash` front-matter values as stable Disqus
+identifiers. The Chirpy Disqus include is overridden so existing discussions
+continue to load instead of creating replacement threads. The 2016 NIF post
+keeps its original URL-based identifier as a compatibility exception.

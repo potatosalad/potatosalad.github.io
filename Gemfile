@@ -1,19 +1,8 @@
-source 'https://rubygems.org'
+# frozen_string_literal: true
 
-ruby '~> 3.4.0'
+source "https://rubygems.org"
 
-gem 'jekyll', '~> 4.4.1'
-gem 'jekyll-compose', group: [:jekyll_plugins]
-gem 'jekyll-feed'
-gem 'jekyll-paginate'
-gem 'jekyll-seo-tag'
-gem 'jekyll-tagging'
-gem 'kramdown'
-gem 'rouge'
-gem 'webrick'
+ruby "~> 3.4.0"
 
-group :test, :development do
-  gem 'dotenv'
-  gem 'rainbow'
-  gem 'rake'
-end
+gem "jekyll-theme-chirpy", "~> 7.6"
+gem "jekyll-compose", "~> 0.12"

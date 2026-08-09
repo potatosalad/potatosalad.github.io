@@ -1,72 +1,167 @@
-# Welcome to Jekyll!
-#
-# This config file is meant for settings that affect your whole blog, values
-# which you are expected to set up once and rarely edit after that. If you find
-# yourself editing this file very often, consider using Jekyll's data files
-# feature for the data you need to update frequently.
-#
-# For technical reasons, this file is *NOT* reloaded automatically when you use
-# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+# Site identity
+theme: jekyll-theme-chirpy
+lang: en
+timezone: America/Chicago
 
-# Site settings
-# These are used to personalize your new site. If you look in the HTML files,
-# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
-# You can create any custom variable you would like, and they will be accessible
-# in the templates via {{ site.myvariable }}.
 title: potatosalad
 tagline: blog
-email: potatosaladx@gmail.com
-description: > # this means to ignore newlines until "baseurl:"
-  The Development Blog of Andrew Bennett
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://potatosalad.io" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: potatosaladx
-github_username:  potatosalad
-permalink: /:categories/:year/:month/:day/:title
+description: The development blog of Andrew Bennett
+url: "https://potatosalad.io"
+baseurl: ""
 
-# Build settings
-markdown: kramdown
-# theme: lanyon
-plugins:
-  - jekyll-compose
-  - jekyll-feed
-  - jekyll-paginate
-  - jekyll-seo-tag
-  - jekyll/tagging
+# Preserve the historical URLs used by links and Disqus.
+permalink: /:year/:month/:day/:title
 
-# Gem settings
+github:
+  username: potatosalad
+
+twitter:
+  username: potatosaladx
+
+social:
+  name: Andrew Bennett
+  email: potatosaladx@gmail.com
+  links:
+    - https://twitter.com/potatosaladx
+    - https://github.com/potatosalad
+
+webmaster_verifications:
+  google:
+  bing:
+  alexa:
+  yandex:
+  baidu:
+  facebook:
+
+analytics:
+  google:
+    id: UA-73459380-1
+  goatcounter:
+    id:
+  umami:
+    id:
+    domain:
+  matomo:
+    id:
+    domain:
+  cloudflare:
+    id:
+  fathom:
+    id:
+
+pageviews:
+  provider:
+
+theme_mode:
+cdn:
+avatar:
+social_preview_image:
+toc: true
+
+actions:
+  edit_post:
+    enabled: false
+    url: ""
+    static_url: false
+
+comments:
+  provider: disqus
+  disqus:
+    shortname: potatosalad
+  utterances:
+    repo:
+    issue_term:
+  giscus:
+    repo:
+    repo_id:
+    category:
+    category_id:
+    mapping:
+    strict:
+    input_position:
+    lang:
+    reactions_enabled:
+
+assets:
+  self_host:
+    enabled: false
+    env:
+
+pwa:
+  enabled: true
+  cache:
+    enabled: true
+    deny_paths:
+
 paginate: 5
-author:
-  name:    Andrew Bennett
-  twitter: https://twitter.com/potatosaladx
-  github:  https://github.com/potatosalad
 
-# Tags
-tag_page_layout: tag_page
-tag_page_dir:    tag
-tag_permalink_style: pretty
+kramdown:
+  footnote_backlink: "&#8617;&#xfe0e;"
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
 
-# Custom vars
-version: 2.0.0
+collections:
+  tabs:
+    output: true
+    sort_by: order
 
-# Exclude from processing.
-# The following items will not be processed, by default. Create a custom list
-# to override the default setting.
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: true
+      toc: true
+      permalink: /:year/:month/:day/:title
+  - scope:
+      path: _drafts
+    values:
+      comments: false
+  - scope:
+      path: ""
+      type: tabs
+    values:
+      layout: page
+      permalink: /:title/
+
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  blanklines: false
+  ignore:
+    envs: [development]
+
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/
+
 exclude:
   - .sass-cache/
   - .jekyll-cache/
-  - gemfiles/
+  - .tmp/
+  - Dockerfile
   - Gemfile
   - Gemfile.lock
-  - Dockerfile
   - justfile
   - LICENSE.md
-  - node_modules/
-  - Rakefile
   - README.md
   - tests/
   - util/
-  - vendor/bundle/
-  - vendor/cache/
-  - vendor/gems/
-  - vendor/ruby/
+  - vendor/
