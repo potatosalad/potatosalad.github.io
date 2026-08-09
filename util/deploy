@@ -3,6 +3,11 @@
 set -e # exit immediately if any commands fail
 set -x # debug mode
 
+if [[ ! -f /.dockerenv && ! -f /run/.containerenv ]]; then
+  echo "error: util/deploy must run inside the project container" >&2
+  exit 1
+fi
+
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../" && pwd )"
 SRC="$ROOT/_site"
 TMP="$ROOT/.tmp"
@@ -22,6 +27,8 @@ function prepare() {
   git reset --hard "origin/$branch"
   git clean -dfx
   (git rm -rf --quiet . 1>/dev/null 2>/dev/null) || true
+  git config user.name "$(git -C "$ROOT" log -1 --format='%an')"
+  git config user.email "$(git -C "$ROOT" log -1 --format='%ae')"
 }
 
 function build() {
@@ -36,8 +43,16 @@ function publish() {
   local branch="$1"
   cd "$DST"
   git add --all
+  if git diff --cached --quiet; then
+    echo "No site changes to deploy."
+    return
+  fi
   git commit -m "Deployment $(date '+%Y-%m-%d %H:%M:%S %z')"
-  git push origin "$branch"
+  if [[ "${DEPLOY_DRY_RUN:-0}" == "1" ]]; then
+    echo "Dry run requested; skipping push."
+  else
+    git push origin "$branch"
+  fi
 }
 
 function deploy() {

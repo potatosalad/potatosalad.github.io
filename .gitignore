@@ -46,3 +46,7 @@ bower_components
 .jekyll-cache
 .jekyll-metadata
 .sass-cache
+
+# Python test artifacts
+__pycache__/
+*.pyc

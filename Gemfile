@@ -1,15 +1,16 @@
 source 'https://rubygems.org'
 
-ruby '2.7.0'
+ruby '~> 3.4.0'
 
-gem 'jekyll'
+gem 'jekyll', '~> 4.4.1'
 gem 'jekyll-compose', group: [:jekyll_plugins]
 gem 'jekyll-feed'
 gem 'jekyll-paginate'
 gem 'jekyll-seo-tag'
-gem 'jekyll-tagging'#, github: 'queirozfcom/jekyll-tagging', branch: 'master'
+gem 'jekyll-tagging'
 gem 'kramdown'
 gem 'rouge'
+gem 'webrick'
 
 group :test, :development do
   gem 'dotenv'

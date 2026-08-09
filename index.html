@@ -12,7 +12,7 @@ title: Home
       </a>
     </h1>
     <span class="post-date">{{ post.date | date: "%-d %b, %Y" }}</span>
-    <span class="post-comments"><a href="{{ post.url | prepend: site.baseurl }}#disqus_thread"></a></span>
+    <span class="post-comments"><a href="{{ post.url | relative_url }}#disqus_thread"{% unless post.hash == 'post-2016-02-06-ae71986a' %} data-disqus-identifier="{{ post.hash }}"{% endunless %}>Comments</a></span>
     <hr>
     {{ post.content }}
   </div>

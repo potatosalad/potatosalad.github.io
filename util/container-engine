@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -n "${CONTAINER_ENGINE:-}" ]]; then
+  if ! command -v "$CONTAINER_ENGINE" >/dev/null 2>&1; then
+    echo "CONTAINER_ENGINE is not installed: $CONTAINER_ENGINE" >&2
+    exit 1
+  fi
+  if ! "$CONTAINER_ENGINE" info >/dev/null 2>&1; then
+    echo "CONTAINER_ENGINE is not working: $CONTAINER_ENGINE" >&2
+    exit 1
+  fi
+  printf '%s\n' "$CONTAINER_ENGINE"
+  exit 0
+fi
+
+for candidate in docker podman; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" info >/dev/null 2>&1; then
+    printf '%s\n' "$candidate"
+    exit 0
+  fi
+done
+
+echo "Neither a working Docker nor Podman installation was found." >&2
+exit 1
