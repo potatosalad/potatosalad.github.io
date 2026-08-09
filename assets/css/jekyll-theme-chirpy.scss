@@ -62,13 +62,14 @@ $sidebar-desktop-breakpoint: 1200px;
 
   #sidebar {
     width: $sidebar-rail-width;
-    overflow-x: hidden;
     transform: none;
     -webkit-transform: none;
   }
 
   body[sidebar-display] #sidebar {
     width: $sidebar-expanded-width;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   #main-wrapper {
@@ -131,6 +132,18 @@ $sidebar-desktop-breakpoint: 1200px;
   }
 
   body:not([sidebar-display]) #sidebar {
+    overflow: visible;
+
+    .sidebar-bottom .dropdown-menu {
+      position: fixed !important;
+      top: auto !important;
+      right: auto !important;
+      bottom: 1rem !important;
+      left: calc($sidebar-rail-width + 0.5rem) !important;
+      z-index: 1000;
+      transform: none !important;
+    }
+
     .profile-wrapper {
       width: 100%;
       min-height: 3rem;
@@ -169,7 +182,7 @@ $sidebar-desktop-breakpoint: 1200px;
     }
 
     .sidebar-bottom {
-      position: absolute;
+      position: fixed;
       bottom: 1rem;
       left: 0;
       justify-content: center;
