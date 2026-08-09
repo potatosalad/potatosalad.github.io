@@ -119,6 +119,17 @@ $sidebar-desktop-breakpoint: 1200px;
     display: none !important;
   }
 
+  #sidebar .sidebar-bottom #mode-toggle {
+    > i {
+      display: none !important;
+    }
+
+    &::before {
+      content: '\f042';
+      font: var(--fa-font-solid);
+    }
+  }
+
   body:not([sidebar-display]) #sidebar {
     .profile-wrapper {
       width: 100%;
@@ -169,17 +180,6 @@ $sidebar-desktop-breakpoint: 1200px;
 
       > a {
         display: none;
-      }
-
-      #mode-toggle {
-        > i {
-          display: none !important;
-        }
-
-        &::before {
-          content: '\f042';
-          font: var(--fa-font-solid);
-        }
       }
 
       .icon-border {

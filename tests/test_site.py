@@ -151,6 +151,7 @@ def test_theme_responsive_content_colors() -> None:
     require("content: '\\f138'" in stylesheet, "collapsed rail must use Font Awesome's expand icon")
     require("content: '\\f137'" in stylesheet, "expanded sidebar must use Font Awesome's collapse icon")
     require("content: '\\f042'" in stylesheet, "collapsed rail must visibly retain the theme switcher")
+    require("#sidebar .sidebar-bottom #mode-toggle" in stylesheet, "theme switcher must keep the collapsed icon when expanded")
     require("transition: width" not in stylesheet, "sidebar width must not animate and make controls jump")
     require("transition: none !important" in stylesheet, "all sidebar controls must switch position without animation")
     require("text-decoration: none !important" in stylesheet, "sidebar toggle icon must not inherit link underlining")
