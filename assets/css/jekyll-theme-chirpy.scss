@@ -32,6 +32,8 @@ body[sidebar-display] #sidebar {
 
 #sidebar-trigger {
   display: block !important;
+  order: -1;
+  margin-right: 1rem;
 }
 
 /* Static charts were exported for a white canvas. Filtering the composited
