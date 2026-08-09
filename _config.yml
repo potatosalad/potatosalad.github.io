@@ -157,6 +157,7 @@ exclude:
   - .sass-cache/
   - .jekyll-cache/
   - .tmp/
+  - AGENTS.md
   - Dockerfile
   - Gemfile
   - Gemfile.lock

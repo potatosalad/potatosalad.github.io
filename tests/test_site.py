@@ -51,6 +51,14 @@ def test_chirpy_starter_structure() -> None:
     require("layout: home" in (ROOT / "index.html").read_text(), "index must use Chirpy home layout")
 
 
+def test_agent_instructions() -> None:
+    agents = (ROOT / "AGENTS.md").read_text()
+    config = (ROOT / "_config.yml").read_text()
+    for command in ("just dev", "just test", "just build", "just deploy-dry-run", "just deploy"):
+        require(command in agents, f"AGENTS.md missing workflow command: {command}")
+    require("  - AGENTS.md" in config, "AGENTS.md must not be published as site content")
+
+
 def test_post_categories() -> None:
     expected = {
         "2016-02-06-erlang-nif-with-timeslice-reductions.md": "Native Interoperability",
@@ -273,6 +281,7 @@ def main() -> int:
     tests = [
         test_chirpy_configuration,
         test_chirpy_starter_structure,
+        test_agent_instructions,
         test_post_categories,
         test_post_topbar_home_link,
         test_disqus_identifier_override,
