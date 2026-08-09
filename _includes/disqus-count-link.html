@@ -1,0 +1,6 @@
+{% assign count_post = include.post %}
+{% if count_post.hash == 'post-2016-02-06-ae71986a' %}
+  <a href="{{ site.canonical_url }}{{ count_post.url }}#disqus_thread">Comments</a>
+{% else %}
+  <a href="{{ count_post.url | relative_url }}#disqus_thread" data-disqus-identifier="{{ count_post.hash }}">Comments</a>
+{% endif %}

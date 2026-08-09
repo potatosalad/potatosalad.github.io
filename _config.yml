@@ -3,10 +3,11 @@ theme: jekyll-theme-chirpy
 lang: en
 timezone: America/Chicago
 
-title: potatosalad
-tagline: blog
+title: potatosalad.io
+tagline: ""
 description: The development blog of Andrew Bennett
 url: "https://potatosalad.io"
+canonical_url: "https://potatosalad.io"
 baseurl: ""
 
 # Preserve the historical URLs used by links and Disqus.
@@ -54,7 +55,7 @@ pageviews:
 
 theme_mode:
 cdn:
-avatar:
+avatar: /public/apple-touch-icon-precomposed.png
 social_preview_image:
 toc: true
 

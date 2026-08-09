@@ -2,6 +2,7 @@
 layout: post
 title: "Time-Out: Elixir State Machines versus Servers"
 tags: Elixir Erlang gen_statem
+categories: [BEAM Architecture]
 hash: post-2017-10-13-ad9a120f
 ---
 

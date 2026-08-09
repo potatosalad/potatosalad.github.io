@@ -1,11 +1,9 @@
 <script>
   var disqus_config = function () {
-    this.page.url = '{{ page.url | absolute_url }}';
-    {% if page.hash == 'post-2016-02-06-ae71986a' %}
-      this.page.identifier = '{{ page.url }}';
-    {% else %}
+    this.page.url = '{{ site.canonical_url }}{{ page.url }}';
+    {% unless page.hash == 'post-2016-02-06-ae71986a' %}
       this.page.identifier = '{{ page.hash }}';
-    {% endif %}
+    {% endunless %}
   };
 
   function addDisqus() {

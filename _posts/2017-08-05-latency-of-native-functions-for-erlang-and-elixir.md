@@ -2,6 +2,7 @@
 layout: post
 title: Latency of Native Functions for Erlang and Elixir
 tags: C Elixir Erlang Performance
+categories: [Native Interoperability]
 hash: post-2017-08-05-b55da7d7
 ---
 
@@ -30,27 +31,27 @@ Use this potentially helpful and fairly unscientific table to help you decide:
   </tr>
   <tr>
     <td><tt>Node</tt></td>
-    <td style="background-color: #cfc;"><tt>Network</tt></td>
-    <td style="background-color: #fcc;"><tt>Highest</tt></td>
-    <td style="background-color: #fcc;"><tt>Highest</tt></td>
+    <td class="metric-good"><tt>Network</tt></td>
+    <td class="metric-bad"><tt>Highest</tt></td>
+    <td class="metric-bad"><tt>Highest</tt></td>
   </tr>
   <tr>
     <td><tt>Port</tt></td>
-    <td style="background-color: #ffc;"><tt>Process</tt></td>
-    <td style="background-color: #fcc;"><tt>High</tt></td>
-    <td style="background-color: #fcc;"><tt>High</tt></td>
+    <td class="metric-caution"><tt>Process</tt></td>
+    <td class="metric-bad"><tt>High</tt></td>
+    <td class="metric-bad"><tt>High</tt></td>
   </tr>
   <tr>
     <td><tt>Port Driver</tt></td>
-    <td style="background-color: #fcc;"><tt>Shared</tt></td>
-    <td style="background-color: #ffc;"><tt>Low</tt></td>
-    <td style="background-color: #ffc;"><tt>Low</tt></td>
+    <td class="metric-bad"><tt>Shared</tt></td>
+    <td class="metric-caution"><tt>Low</tt></td>
+    <td class="metric-caution"><tt>Low</tt></td>
   </tr>
   <tr>
     <td><tt>NIF</tt></td>
-    <td style="background-color: #fcc;"><tt>Shared</tt></td>
-    <td style="background-color: #cfc;"><tt>Lowest</tt></td>
-    <td style="background-color: #cfc;"><tt>Lowest</tt></td>
+    <td class="metric-bad"><tt>Shared</tt></td>
+    <td class="metric-good"><tt>Lowest</tt></td>
+    <td class="metric-good"><tt>Lowest</tt></td>
   </tr>
 </table>
 
@@ -97,7 +98,7 @@ Latency.compare(term, 100_000)
 
 First, let's compare the 4 major types of native functions:
 
-[![chart1]({{ site.url }}/assets/{{ page.hash }}/chart1.png)]({{ site.url }}/assets/{{ page.hash }}/chart1.png)
+[![chart1](/assets/{{ page.hash }}/chart1.png)](/assets/{{ page.hash }}/chart1.png)
 
 Comparison of results using the order of magnitude of average latency:
 
@@ -109,23 +110,23 @@ Comparison of results using the order of magnitude of average latency:
   </tr>
   <tr>
     <td><tt>Node</tt></td>
-    <td style="background-color: #cfc;"><tt>Network</tt></td>
-    <td style="background-color: #fcc; text-align: right;"><tt>~100μs</tt></td>
+    <td class="metric-good"><tt>Network</tt></td>
+    <td class="metric-bad text-end"><tt>~100μs</tt></td>
   </tr>
   <tr>
     <td><tt>Port</tt></td>
-    <td style="background-color: #ffc;"><tt>Process</tt></td>
-    <td style="background-color: #fcc; text-align: right;"><tt>~100μs</tt></td>
+    <td class="metric-caution"><tt>Process</tt></td>
+    <td class="metric-bad text-end"><tt>~100μs</tt></td>
   </tr>
   <tr>
     <td><tt>Port Driver</tt></td>
-    <td style="background-color: #fcc;"><tt>Shared</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~10μs</tt></td>
+    <td class="metric-bad"><tt>Shared</tt></td>
+    <td class="metric-caution text-end"><tt>~10μs</tt></td>
   </tr>
   <tr>
     <td><tt>NIF</tt></td>
-    <td style="background-color: #fcc;"><tt>Shared</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~0.1μs</tt></td>
+    <td class="metric-bad"><tt>Shared</tt></td>
+    <td class="metric-good text-end"><tt>~0.1μs</tt></td>
   </tr>
 </table>
 
@@ -143,7 +144,7 @@ The documentation for [`driver_entry`](http://erlang.org/doc/man/driver_entry.ht
 2. [`control`](http://erlang.org/doc/man/driver_entry.html#control) &mdash; [lines 41-52 of `latency_drv.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52)
 3. [`outputv`](http://erlang.org/doc/man/driver_entry.html#outputv) &mdash; [lines 54-59 of `latency_drv.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59)
 
-[![chart2]({{ site.url }}/assets/{{ page.hash }}/chart2.png)]({{ site.url }}/assets/{{ page.hash }}/chart2.png)
+[![chart2](/assets/{{ page.hash }}/chart2.png)](/assets/{{ page.hash }}/chart2.png)
 
 Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, [`erlang:port_call/3`](http://erlang.org/doc/man/erlang.html#port_call-3) allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.
 
@@ -155,18 +156,18 @@ Also worth noting is the type of data allowed to be sent to the Port Driver.  Fo
   </tr>
   <tr>
     <td><tt>call</tt></td>
-    <td style="background-color: #cfc;"><tt>term()</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~15μs</tt></td>
+    <td class="metric-good"><tt>term()</tt></td>
+    <td class="metric-caution text-end"><tt>~15μs</tt></td>
   </tr>
   <tr>
     <td><tt>control</tt></td>
-    <td style="background-color: #ffc;"><tt>iodata()</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~15μs</tt></td>
+    <td class="metric-caution"><tt>iodata()</tt></td>
+    <td class="metric-caution text-end"><tt>~15μs</tt></td>
   </tr>
   <tr>
     <td><tt>outputv</tt></td>
-    <td style="background-color: #ffc;"><tt>iodata()</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~10μs</tt></td>
+    <td class="metric-caution"><tt>iodata()</tt></td>
+    <td class="metric-good text-end"><tt>~10μs</tt></td>
   </tr>
 </table>
 
@@ -181,7 +182,7 @@ Also worth noting is the type of data allowed to be sent to the Port Driver.  Fo
 2. Future &mdash; [lines 32-36 of `latency_nif.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36)
 3. Normal &mdash; [lines 14-18 of `latency_nif.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18)
 
-[![chart3]({{ site.url }}/assets/{{ page.hash }}/chart3.png)]({{ site.url }}/assets/{{ page.hash }}/chart3.png)
+[![chart3](/assets/{{ page.hash }}/chart3.png)](/assets/{{ page.hash }}/chart3.png)
 
 The Normal NIF call is the only one that doesn't have any sort of context switching involved.  The Yielding (or Future) NIF also doesn't involve much of a context switch as it yields control back to the same scheduler that dispatched the call.  Dirty NIF calls, however, result in a ~2μs context switch delay as the function gets enqueued on the dirty thread pool.
 
@@ -193,23 +194,23 @@ The Normal NIF call is the only one that doesn't have any sort of context switch
   </tr>
   <tr>
     <td><tt>Dirty CPU</tt></td>
-    <td style="background-color: #ffc;"><tt>Thread Queue</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~2.0μs</tt></td>
+    <td class="metric-caution"><tt>Thread Queue</tt></td>
+    <td class="metric-caution text-end"><tt>~2.0μs</tt></td>
   </tr>
   <tr>
     <td><tt>Dirty I/O</tt></td>
-    <td style="background-color: #ffc;"><tt>Thread Queue</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~2.0μs</tt></td>
+    <td class="metric-caution"><tt>Thread Queue</tt></td>
+    <td class="metric-caution text-end"><tt>~2.0μs</tt></td>
   </tr>
   <tr>
     <td><tt>Future</tt></td>
-    <td style="background-color: #ffc;"><tt>Yield</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~0.5μs</tt></td>
+    <td class="metric-caution"><tt>Yield</tt></td>
+    <td class="metric-good text-end"><tt>~0.5μs</tt></td>
   </tr>
   <tr>
     <td><tt>Normal</tt></td>
-    <td style="background-color: #cfc;"><tt>None</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~0.1μs</tt></td>
+    <td class="metric-good"><tt>None</tt></td>
+    <td class="metric-good text-end"><tt>~0.1μs</tt></td>
   </tr>
 </table>
 
@@ -218,7 +219,7 @@ Just for fun, I was curious about the latency differences between the new Dirty 
 1. Thread New &mdash; [lines 38-72 of `latency_nif.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72)
 2. Thread Queue &mdash; [lines 74-90 of `latency_nif.c`](https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90)
 
-[![chart4]({{ site.url }}/assets/{{ page.hash }}/chart4.png)]({{ site.url }}/assets/{{ page.hash }}/chart4.png)
+[![chart4](/assets/{{ page.hash }}/chart4.png)](/assets/{{ page.hash }}/chart4.png)
 
 As it turns out, creating and destroying a thread for each and every call is unwise for a few reasons; poor latency being one of them.  The Async NIF (or Thread Queue) has the advantage of providing a pool per NIF instead of having to share the global thread pool with other NIFs.  However, Dirty NIF thread pools are definitely more optimized and are typically 4x faster than the Async NIF implementation.
 
@@ -230,23 +231,23 @@ As it turns out, creating and destroying a thread for each and every call is unw
   </tr>
   <tr>
     <td><tt>Thread New</tt></td>
-    <td style="background-color: #fcc;"><tt>None</tt></td>
-    <td style="background-color: #fcc; text-align: right;"><tt>~50.0μs</tt></td>
+    <td class="metric-bad"><tt>None</tt></td>
+    <td class="metric-bad text-end"><tt>~50.0μs</tt></td>
   </tr>
   <tr>
     <td><tt>Thread Queue</tt></td>
-    <td style="background-color: #ffc;"><tt>NIF</tt></td>
-    <td style="background-color: #ffc; text-align: right;"><tt>~8.0μs</tt></td>
+    <td class="metric-caution"><tt>NIF</tt></td>
+    <td class="metric-caution text-end"><tt>~8.0μs</tt></td>
   </tr>
   <tr>
     <td><tt>Dirty CPU</tt></td>
-    <td style="background-color: #ffc;"><tt>Global</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~2.0μs</tt></td>
+    <td class="metric-caution"><tt>Global</tt></td>
+    <td class="metric-good text-end"><tt>~2.0μs</tt></td>
   </tr>
   <tr>
     <td><tt>Dirty I/O</tt></td>
-    <td style="background-color: #ffc;"><tt>Global</tt></td>
-    <td style="background-color: #cfc; text-align: right;"><tt>~2.0μs</tt></td>
+    <td class="metric-caution"><tt>Global</tt></td>
+    <td class="metric-good text-end"><tt>~2.0μs</tt></td>
   </tr>
 </table>
 

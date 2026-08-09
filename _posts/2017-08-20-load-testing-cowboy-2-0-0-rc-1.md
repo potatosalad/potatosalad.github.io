@@ -2,6 +2,7 @@
 layout: post
 title: Load Testing cowboy 2.0.0-rc.1
 tags: Elixir Erlang HTTP/2 Performance
+categories: [Performance Engineering]
 hash: post-2017-08-20-ac796fcf
 ---
 
@@ -139,19 +140,19 @@ The test script used is available here:
 
 First, let's test cowboy 1.x using h2load in HTTP/1.1 mode.
 
-[![cowboy-1.1.2.1.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2.1.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2.1.svg)
+[![cowboy-1.1.2.1.svg](/assets/{{ page.hash }}/cowboy-1.1.2.1.svg)](/assets/{{ page.hash }}/cowboy-1.1.2.1.svg)
 
 Not bad, an average of ~20k req/s and maximum of ~40k req/s.
 
 Second, let's test our cowboy 2.x handler using h2load in HTTP/2 mode.
 
-[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg)
+[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg)](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.a.svg)
 
 We have a 2x performance gain with an average of ~40k req/s and maximum of ~70k req/s.
 
 [Loïc Hoguin](https://github.com/essen), the author of cowboy, mentioned in [this issue](https://github.com/ninenines/cowboy/issues/1169) that using the [`cowboy_stream`](https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/) behaviour should provide a little extra performance, so let's test it.
 
-[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg)
+[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg)](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg)
 
 Loïc was right!  We gained a 1.5x increase over our handler test and a 3x increase over cowboy 1.x with an average of ~60k req/s and maximum of ~90k req/s.
 
@@ -159,7 +160,7 @@ A few months ago, I started a [very unstable experiment](https://github.com/pota
 
 I succeeded in creating a _very_ unstable test setup that can actually have [a module](https://github.com/potatosalad/elixirconf2017/blob/82d2c04338a3b273b6cdb8375d6cc2df4d80f7fa/apps/contention/lib/contention/h2o/handler.ex) send responses back to requests received by libh2o.
 
-[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg)
+[![cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg)](/assets/{{ page.hash }}/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1-vs-h2o-2.2.0.svg)
 
 The average of ~280k req/s and maximum of ~400k req/s is pretty consistent with [h2o's benchmark claims](https://h2o.examp1e.net/benchmarks.html).
 
@@ -171,19 +172,19 @@ For the extra curious, below are the measured scheduler utilization graphs for e
 
 *Note:* My explanations below are currently in "guess"-form and are not based on any hard evidence.  I plan to explore the real reasons for theses numbers in a future post.
 
-[![cowboy-1.1.2.0.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2.0.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-1.1.2.0.svg)
+[![cowboy-1.1.2.0.svg](/assets/{{ page.hash }}/cowboy-1.1.2.0.svg)](/assets/{{ page.hash }}/cowboy-1.1.2.0.svg)
 
 For the load test on cowboy 1.x, the schedulers are slightly under utilized.  I suspect this is primarily due to the HTTP/1.1 protocol itself where TCP connections are not used nearly as efficiently as in HTTP/2.  The extra time is probably spent waiting on I/O.
 
-[![cowboy-2.0.0-rc.1-handler.0.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-handler.0.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-handler.0.svg)
+[![cowboy-2.0.0-rc.1-handler.0.svg](/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-handler.0.svg)](/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-handler.0.svg)
 
 100% scheduler utilization for the duration of the tests.  This is what you might expect to see during a load test.
 
-[![cowboy-2.0.0-rc.1-stream.0.svg]({{ site.url }}/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-stream.0.svg)]({{ site.url }}/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-stream.0.svg)
+[![cowboy-2.0.0-rc.1-stream.0.svg](/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-stream.0.svg)](/assets/{{ page.hash }}/cowboy-2.0.0-rc.1-stream.0.svg)
 
 The stream handler in cowboy 2.x uses a single process per connection.  The previous test, however, uses a single process per stream.  Therefore, the extra 20% of overhead for the previous test may be due to process creation, scheduling, and garbage collection.
 
-[![h2o-2.2.0.0.svg]({{ site.url }}/assets/{{ page.hash }}/h2o-2.2.0.0.svg)]({{ site.url }}/assets/{{ page.hash }}/h2o-2.2.0.0.svg)
+[![h2o-2.2.0.0.svg](/assets/{{ page.hash }}/h2o-2.2.0.0.svg)](/assets/{{ page.hash }}/h2o-2.2.0.0.svg)
 
 The h2o implementation uses a single process per server.  As shown in the graph, only ~12% scheduler utilization is indicative of only 1 of the 8 normal schedulers being fully utilized.
 

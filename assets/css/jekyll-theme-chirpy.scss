@@ -1,0 +1,52 @@
+---
+---
+
+@use 'abstracts/variables' with (
+  $theme: '{{ site.theme_mode }}'
+);
+
+/* prettier-ignore */
+@use 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* Static charts were exported for a white canvas. Filtering the composited
+   image preserves their hues while making labels and axes readable in dark mode. */
+.theme-responsive-chart {
+  background-color: #fff;
+  transition: filter 0.2s ease;
+}
+
+:root[data-bs-theme="dark"] .theme-responsive-chart {
+  filter: invert(1) hue-rotate(180deg) contrast(0.82) brightness(1.08);
+}
+
+/* Semantic table colors use translucent backgrounds rather than opacity so
+   the text retains full contrast and the page background participates. */
+.metric-good {
+  background-color: rgba(25, 135, 84, 0.18) !important;
+}
+
+.metric-caution {
+  background-color: rgba(255, 193, 7, 0.2) !important;
+}
+
+.metric-bad {
+  background-color: rgba(220, 53, 69, 0.18) !important;
+}
+
+:root[data-bs-theme="dark"] {
+  .metric-good {
+    background-color: rgba(75, 210, 140, 0.2) !important;
+  }
+
+  .metric-caution {
+    background-color: rgba(255, 205, 70, 0.2) !important;
+  }
+
+  .metric-bad {
+    background-color: rgba(255, 105, 120, 0.2) !important;
+  }
+}
