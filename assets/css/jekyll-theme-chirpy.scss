@@ -14,6 +14,26 @@
 
 @use 'starry-night';
 
+/* Keep navigation available without permanently consuming horizontal space. */
+#sidebar {
+  transition: transform 0.4s ease;
+  transform: translateX(-100%);
+  -webkit-transform: translateX(-100%);
+}
+
+body[sidebar-display] #sidebar {
+  transform: translateX(0);
+  -webkit-transform: translateX(0);
+}
+
+#main-wrapper {
+  margin-left: 0 !important;
+}
+
+#sidebar-trigger {
+  display: block !important;
+}
+
 /* Static charts were exported for a white canvas. Filtering the composited
    image preserves their hues while making labels and axes readable in dark mode. */
 .theme-responsive-chart {

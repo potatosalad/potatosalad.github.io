@@ -140,6 +140,10 @@ def test_static_chart_dependencies() -> None:
 def test_theme_responsive_content_colors() -> None:
     stylesheet = (ROOT / "assets/css/jekyll-theme-chirpy.scss").read_text()
     require(".theme-responsive-chart" in stylesheet, "custom CSS must style theme-responsive SVG charts")
+    require("#sidebar" in stylesheet, "custom CSS must override the desktop sidebar")
+    require("translateX(-100%)" in stylesheet, "sidebar must start closed at every viewport width")
+    require("#sidebar-trigger" in stylesheet, "sidebar trigger must remain available on wide screens")
+    require("margin-left: 0 !important" in stylesheet, "closed sidebar must not reserve desktop page width")
     require('data-bs-theme="dark"' in stylesheet, "custom CSS must define dark-theme adaptations")
     require("contrast(0.82)" in stylesheet, "dark charts must retain visible gridline contrast")
     for css_class in ("metric-good", "metric-caution", "metric-bad"):
