@@ -14,26 +14,147 @@
 
 @use 'starry-night';
 
-/* Keep navigation available without permanently consuming horizontal space. */
-#sidebar {
-  transition: transform 0.4s ease;
-  transform: translateX(-100%);
-  -webkit-transform: translateX(-100%);
+/* Keep desktop navigation available as a compact rail and expand it in-flow. */
+$sidebar-rail-width: 4.5rem;
+$sidebar-expanded-width: 260px;
+$sidebar-expanded-width-large: 300px;
+
+@media all and (min-width: 850px) {
+  #sidebar {
+    width: $sidebar-rail-width;
+    overflow-x: hidden;
+    transform: none;
+    -webkit-transform: none;
+  }
+
+  body[sidebar-display] #sidebar {
+    width: $sidebar-expanded-width;
+  }
+
+  #main-wrapper {
+    width: calc(100% - $sidebar-rail-width);
+    margin-left: $sidebar-rail-width !important;
+  }
+
+  body[sidebar-display] #main-wrapper {
+    width: calc(100% - $sidebar-expanded-width);
+    margin-left: $sidebar-expanded-width !important;
+  }
+
+  #sidebar-trigger {
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: $sidebar-rail-width;
+    height: 3rem;
+    margin: 0;
+    border-radius: 0;
+    background: var(--sidebar-bg);
+  }
+
+  #sidebar-trigger i::before {
+    content: '\f138';
+  }
+
+  body[sidebar-display] #sidebar-trigger {
+    left: calc($sidebar-expanded-width - $sidebar-rail-width);
+  }
+
+  body[sidebar-display] #sidebar-trigger i::before {
+    content: '\f137';
+  }
+
+  #mask {
+    display: none !important;
+  }
+
+  body:not([sidebar-display]) #sidebar {
+    .profile-wrapper {
+      width: 100%;
+      min-height: 3rem;
+      height: 3rem;
+      margin: 3.75rem 0 1.25rem;
+      padding: 0;
+
+      #avatar {
+        display: block !important;
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto;
+      }
+
+      .site-title,
+      .site-subtitle {
+        display: none !important;
+      }
+    }
+
+    ul li.nav-item {
+      padding-right: 0.75rem;
+      padding-left: 0.75rem;
+
+      a.nav-link {
+        justify-content: center;
+
+        i {
+          margin-right: 0;
+        }
+
+        span {
+          display: none;
+        }
+      }
+    }
+
+    .sidebar-bottom {
+      position: absolute;
+      bottom: 1rem;
+      left: 0;
+      justify-content: center;
+      width: $sidebar-rail-width !important;
+      margin: 0;
+      padding-right: 0.75rem;
+      padding-left: 0.75rem;
+
+      > a {
+        display: none;
+      }
+
+      #mode-toggle {
+        > i {
+          display: none !important;
+        }
+
+        &::before {
+          content: '\f042';
+          font: var(--fa-font-solid);
+        }
+      }
+
+      .icon-border {
+        display: none;
+      }
+    }
+  }
 }
 
-body[sidebar-display] #sidebar {
-  transform: translateX(0);
-  -webkit-transform: translateX(0);
-}
+@media all and (min-width: 1650px) {
+  body[sidebar-display] #sidebar {
+    width: $sidebar-expanded-width-large;
+  }
 
-#main-wrapper {
-  margin-left: 0 !important;
-}
+  body[sidebar-display] #main-wrapper {
+    width: calc(100% - $sidebar-expanded-width-large);
+    margin-left: $sidebar-expanded-width-large !important;
+  }
 
-#sidebar-trigger {
-  display: block !important;
-  order: -1;
-  margin-right: 1rem;
+  body[sidebar-display] #sidebar-trigger {
+    left: calc($sidebar-expanded-width-large - $sidebar-rail-width);
+  }
 }
 
 /* Static charts were exported for a white canvas. Filtering the composited
