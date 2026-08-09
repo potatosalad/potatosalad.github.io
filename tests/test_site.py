@@ -218,6 +218,13 @@ def test_generated_chirpy_site() -> None:
     require("jekyll-theme-chirpy.css" in html, "generated pages must load Chirpy CSS")
     require("lanyon" not in html.lower(), "generated pages must not load Lanyon")
     require(
+        'data-highlighter="starry-night"' in html,
+        "generated fenced code blocks must be processed by Starry Night",
+    )
+    require('class="pl-' in html, "generated fenced code must contain Starry Night token classes")
+    stylesheet = (ROOT / "_site/assets/css/jekyll-theme-chirpy.css").read_text()
+    require(".pl-c" in stylesheet, "generated CSS must include the Starry Night theme")
+    require(
         f"this.page.identifier = '{POST_ID}';" in html,
         "generated Disqus embed must use the historical thread identifier",
     )

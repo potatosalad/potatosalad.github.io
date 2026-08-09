@@ -12,6 +12,8 @@
 {%- endif -%}
 ';
 
+@use 'starry-night';
+
 /* Static charts were exported for a white canvas. Filtering the composited
    image preserves their hues while making labels and axes readable in dark mode. */
 .theme-responsive-chart {
