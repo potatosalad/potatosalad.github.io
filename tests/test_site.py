@@ -26,6 +26,8 @@ def test_chirpy_configuration() -> None:
 
     require('gem "jekyll-theme-chirpy", "~> 7.6"' in gemfile, "Gemfile must use Chirpy 7.6")
     require("theme: jekyll-theme-chirpy" in config, "Jekyll must use the Chirpy theme")
+    require("highlighter: none" in config, "Jekyll must leave highlighting to Starry Night")
+    require("syntax_highlighter_opts:" not in config, "Rouge highlighting options must be removed")
     require("title: potatosalad.io" in config, "sidebar title must read potatosalad.io")
     require('tagline: ""' in config, "sidebar must not display the old blog tagline")
     require(

@@ -40,28 +40,29 @@ function highlightDocument(source) {
   const replacements = []
 
   visit(document, (node) => {
-    if (!hasClass(node, 'highlighter-rouge') || hasAttribute(node, 'data-highlighter')) return
+    if (node.tagName !== 'code' || node.parentNode?.tagName !== 'pre') return
 
     const languageClass = classes(node).find((name) => name.startsWith('language-'))
     const flag = languageClass?.slice('language-'.length)
     const scope = flag && starryNight.flagToScope(flag)
-    const code = findDescendant(node, (candidate) => {
-      return candidate.tagName === 'pre' && hasAncestorClass(candidate, node, 'rouge-code')
-    })
+    const pre = node.parentNode
 
-    if (!scope || !code?.sourceCodeLocation?.startTag || !code.sourceCodeLocation.endTag) return
+    if (!scope || !pre.sourceCodeLocation) return
 
-    const value = textContent(code)
+    const value = textContent(node)
     const highlighted = toHtml(starryNight.highlight(value, scope))
+    const lineCount = Math.max(1, value.endsWith('\n') ? value.split('\n').length - 1 : value.split('\n').length)
+    const lineNumbers = Array.from({length: lineCount}, (_, index) => index + 1).join('\n')
+    const safeFlag = escapeAttribute(flag)
+    const label = escapeHtml(languageLabel(flag))
+    const replacement = `<div class="language-${safeFlag} highlighter-starry-night" data-highlighter="starry-night"><div class="code-header">
+        <span data-label-text="${label}"><i class="fas fa-code fa-fw small"></i></span>
+      <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">${lineNumbers}\n</pre></td><td class="rouge-code"><pre>${highlighted}</pre></td></tr></tbody></table></code></div></div>`
+
     replacements.push({
-      start: code.sourceCodeLocation.startTag.endOffset,
-      end: code.sourceCodeLocation.endTag.startOffset,
-      value: highlighted
-    })
-    replacements.push({
-      start: node.sourceCodeLocation.startTag.endOffset - 1,
-      end: node.sourceCodeLocation.startTag.endOffset - 1,
-      value: ' data-highlighter="starry-night"'
+      start: pre.sourceCodeLocation.startOffset,
+      end: pre.sourceCodeLocation.endOffset,
+      value: replacement
     })
     highlightedBlocks += 1
   })
@@ -78,35 +79,43 @@ function visit(node, callback) {
   for (const child of node.childNodes || []) visit(child, callback)
 }
 
-function findDescendant(node, predicate) {
-  for (const child of node.childNodes || []) {
-    if (predicate(child)) return child
-    const found = findDescendant(child, predicate)
-    if (found) return found
+function languageLabel(flag) {
+  const aliases = {
+    bash: 'Shell',
+    c: 'C',
+    cpp: 'C++',
+    css: 'CSS',
+    html: 'HTML',
+    js: 'JavaScript',
+    json: 'JSON',
+    md: 'Markdown',
+    plaintext: 'Text',
+    sh: 'Shell',
+    text: 'Text',
+    ts: 'TypeScript',
+    xml: 'XML'
   }
+  return aliases[flag] || flag.charAt(0).toUpperCase() + flag.slice(1)
 }
 
-function hasAncestorClass(node, boundary, className) {
-  for (let current = node.parentNode; current && current !== boundary; current = current.parentNode) {
-    if (hasClass(current, className)) return true
-  }
-  return false
+function escapeAttribute(value) {
+  return escapeHtml(value).replaceAll('`', '&#96;')
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
 }
 
 function classes(node) {
   return attribute(node, 'class')?.split(/\s+/).filter(Boolean) || []
 }
 
-function hasClass(node, className) {
-  return classes(node).includes(className)
-}
-
 function attribute(node, name) {
   return node.attrs?.find((item) => item.name === name)?.value
-}
-
-function hasAttribute(node, name) {
-  return node.attrs?.some((item) => item.name === name) || false
 }
 
 function textContent(node) {

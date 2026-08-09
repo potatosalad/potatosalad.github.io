@@ -22,8 +22,12 @@ build: image
 dev: image
     {{ engine }} run --rm --interactive --tty {{ network }} {{ ports }} --volume "$PWD:/site" --workdir /site {{ image }} bundle exec jekyll serve --host 0.0.0.0 --livereload --force_polling
 
-# Run source-level regression checks.
-test:
+# Run the Node-based Starry Night regression checks in the project image.
+test-starry-night: image
+    {{ engine }} run --rm --network=none --volume "$PWD:/site" --workdir /site {{ image }} node --test tests/test_starry_night.mjs
+
+# Run all source-level regression checks.
+test: test-starry-night
     python3 tests/test_site.py
 
 # Build and publish master using util/deploy inside the container.
