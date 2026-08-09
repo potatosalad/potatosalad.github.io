@@ -141,6 +141,8 @@ def test_theme_responsive_content_colors() -> None:
     stylesheet = (ROOT / "assets/css/jekyll-theme-chirpy.scss").read_text()
     require(".theme-responsive-chart" in stylesheet, "custom CSS must style theme-responsive SVG charts")
     require("$sidebar-rail-width: 4.5rem" in stylesheet, "desktop sidebar must retain a collapsed rail")
+    require("$sidebar-desktop-breakpoint: 1200px" in stylesheet, "collapsed rail must not leak into tablet/mobile layouts")
+    require("max-width: calc($sidebar-desktop-breakpoint - 1px)" in stylesheet, "tablet widths must retain the drawer layout")
     require("body[sidebar-display] #main-wrapper" in stylesheet, "expanded sidebar must push the page content")
     require("#mask" in stylesheet, "desktop sidebar must disable the overlay mask")
     require("#avatar {" in stylesheet, "collapsed rail must use a purpose-sized avatar")

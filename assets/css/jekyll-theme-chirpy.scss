@@ -18,8 +18,38 @@
 $sidebar-rail-width: 4.5rem;
 $sidebar-expanded-width: 260px;
 $sidebar-expanded-width-large: 300px;
+$sidebar-desktop-breakpoint: 1200px;
 
-@media all and (min-width: 850px) {
+/* Chirpy exposes its permanent sidebar at 850px. Keep the drawer through
+   tablet widths so the rail cannot consume a mobile-sized content area. */
+@media all and (max-width: calc($sidebar-desktop-breakpoint - 1px)) {
+  #sidebar {
+    width: $sidebar-expanded-width;
+    transform: translateX(-$sidebar-expanded-width);
+    -webkit-transform: translateX(-$sidebar-expanded-width);
+  }
+
+  body[sidebar-display] #sidebar {
+    transform: translateX(0);
+    -webkit-transform: translateX(0);
+  }
+
+  #main-wrapper {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  body[sidebar-display] #main-wrapper {
+    transform: translateX($sidebar-expanded-width);
+  }
+
+  #sidebar-trigger,
+  #search-trigger {
+    display: block;
+  }
+}
+
+@media all and (min-width: $sidebar-desktop-breakpoint) {
   #sidebar,
   #sidebar *,
   #sidebar-trigger,
