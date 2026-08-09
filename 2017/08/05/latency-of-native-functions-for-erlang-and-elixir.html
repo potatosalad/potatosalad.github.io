@@ -26,21 +26,24 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.6.1 -->
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
 <title>Latency of Native Functions for Erlang and Elixir | potatosalad</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Latency of Native Functions for Erlang and Elixir" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Erlang and C first appeared within 14 years* of one another." />
-<meta property="og:description" content="Erlang and C first appeared within 14 years* of one another." />
+<meta name="twitter:description" property="og:description" content="Erlang and C first appeared within 14 years* of one another." />
 <link rel="canonical" href="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir" />
 <meta property="og:url" content="https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir" />
 <meta property="og:site_name" content="potatosalad" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2017-08-05T00:00:00-05:00" />
+<meta property="article:published_time" content="2017-08-05T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-08-05T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Latency of Native Functions for Erlang and Elixir" />
 <script type="application/ld+json">
-{"dateModified":"2017-08-05T00:00:00-05:00","datePublished":"2017-08-05T00:00:00-05:00","headline":"Latency of Native Functions for Erlang and Elixir","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir"},"author":{"@type":"Person","name":"Andrew Bennett"},"url":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir","description":"Erlang and C first appeared within 14 years* of one another.","@type":"BlogPosting","@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Andrew Bennett"},"dateModified":"2017-08-05T00:00:00+00:00","datePublished":"2017-08-05T00:00:00+00:00","description":"Erlang and C first appeared within 14 years* of one another.","headline":"Latency of Native Functions for Erlang and Elixir","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir"},"url":"https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -141,7 +144,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2020. All rights reserved.
+      &copy; 2026. All rights reserved.
     </p>
   </div>
 </div>
@@ -163,7 +166,7 @@
         <div class="post post-2017-08-05-b55da7d7">
   <h1 class="post-title">Latency of Native Functions for Erlang and Elixir</h1>
   <span class="post-date">5 Aug, 2017</span>
-  <span class="post-comments"><a href="#disqus_thread"></a></span>
+  <span class="post-comments"><a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir#disqus_thread" data-disqus-identifier="post-2017-08-05-b55da7d7">Comments</a></span>
   <hr>
   <p>Erlang and C first appeared within 14 years<sup><a href="#footnote-post-2017-08-05-b55da7d7-1">*</a></sup> of one another.</p>
 
@@ -254,13 +257,13 @@
   </li>
 </ol>
 
-<p>The NIF and Port Driver implementations have a few different internal strategies for additional comparison (like Dirty NIF and <code class="highlighter-rouge">iodata()</code> based port output).</p>
+<p>The NIF and Port Driver implementations have a few different internal strategies for additional comparison (like Dirty NIF and <code class="language-plaintext highlighter-rouge">iodata()</code> based port output).</p>
 
 <p>Certain methods should have higher levels of latency based on serialization and isolation requirements.  For example, a C Node requires serialization of the entire term in order to pass it back and forth over a TCP connection.  A NIF, by comparison, requires no serialization and operates on the term itself in memory.</p>
 
 <p>Each implementation was tested with a ~64KB binary full of 1’s as the sole element of a 1-arity tuple for 100,000 iterations.  The measured elapsed time for each method were then fed into <a href="http://hdrhistogram.org/">HDR Histogram</a> for latency analysis.</p>
 
-<p>In other words, I essentially did the following on the <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency.ex"><code class="highlighter-rouge">Latency</code></a> module:</p>
+<p>In other words, I essentially did the following on the <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency.ex"><code class="language-plaintext highlighter-rouge">Latency</code></a> module:</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">term</span> <span class="o">=</span> <span class="p">{</span><span class="ss">:binary</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="o">&lt;&lt;</span><span class="mi">1</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">64</span><span class="p">)}</span>
 <span class="no">Latency</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)</span>
@@ -310,17 +313,17 @@
 
 <p>Port drivers, under certain circumstances, can be roughly as fast as a NIF.  This is especially true for very small terms or when the majority of the work performed is I/O or binary-based.</p>
 
-<p>The documentation for <a href="http://erlang.org/doc/man/driver_entry.html"><code class="highlighter-rouge">driver_entry</code></a> mentions that <a href="http://erlang.org/doc/man/erlang.html#port_control-3"><code class="highlighter-rouge">erlang:port_control/3</code></a> should be the fastest way to call a native function.  This seems to be true for very small terms, but larger terms cause the performance to be almost identical to <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="highlighter-rouge">erlang:port_call/3</code></a>.  Converting terms to the <a href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">External Term Format</a> and sending with <a href="http://erlang.org/doc/man/erlang.html#port_command-3"><code class="highlighter-rouge">erlang:port_command/3</code></a> (which in turn calls the <a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="highlighter-rouge">outputv</code></a> callback) actually appears to have slightly less latency.</p>
+<p>The documentation for <a href="http://erlang.org/doc/man/driver_entry.html"><code class="language-plaintext highlighter-rouge">driver_entry</code></a> mentions that <a href="http://erlang.org/doc/man/erlang.html#port_control-3"><code class="language-plaintext highlighter-rouge">erlang:port_control/3</code></a> should be the fastest way to call a native function.  This seems to be true for very small terms, but larger terms cause the performance to be almost identical to <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="language-plaintext highlighter-rouge">erlang:port_call/3</code></a>.  Converting terms to the <a href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">External Term Format</a> and sending with <a href="http://erlang.org/doc/man/erlang.html#port_command-3"><code class="language-plaintext highlighter-rouge">erlang:port_command/3</code></a> (which in turn calls the <a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="language-plaintext highlighter-rouge">outputv</code></a> callback) actually appears to have slightly less latency.</p>
 
 <ol>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#call"><code class="highlighter-rouge">call</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L61-L70">lines 61-70 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#control"><code class="highlighter-rouge">control</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52">lines 41-52 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="highlighter-rouge">outputv</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59">lines 54-59 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#call"><code class="language-plaintext highlighter-rouge">call</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L61-L70">lines 61-70 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#control"><code class="language-plaintext highlighter-rouge">control</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52">lines 41-52 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="language-plaintext highlighter-rouge">outputv</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59">lines 54-59 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png" alt="chart2" /></a></p>
 
-<p>Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="highlighter-rouge">erlang:port_call/3</code></a> allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.</p>
+<p>Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="language-plaintext highlighter-rouge">erlang:port_call/3</code></a> allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.</p>
 
 <table>
   <tr>
@@ -349,13 +352,13 @@
 
 <p><a href="http://erlang.org/doc/man/erl_nif.html">Native Implemented Function (NIF)</a> is a relatively recent addition to OTP and is the fastest way to call native functions.  However, a mis-behaving NIF can easily destabilize or crash the entire Erlang VM.</p>
 
-<p><a href="http://erlang.org/doc/man/erl_nif.html#dirty_nifs">Dirty NIF</a> and Yielding (or Future) NIF with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="highlighter-rouge">enif_schedule_nif</code></a> are even more recent additions that help prevent blocking the Erlang VM schedulers during execution or (in the case of I/O) waiting.</p>
+<p><a href="http://erlang.org/doc/man/erl_nif.html#dirty_nifs">Dirty NIF</a> and Yielding (or Future) NIF with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="language-plaintext highlighter-rouge">enif_schedule_nif</code></a> are even more recent additions that help prevent blocking the Erlang VM schedulers during execution or (in the case of I/O) waiting.</p>
 
 <ol>
-  <li>Dirty CPU — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L20-L24">lines 20-24 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Dirty I/O — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L26-L30">lines 26-30 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Future — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36">lines 32-36 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Normal — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18">lines 14-18 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Dirty CPU — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L20-L24">lines 20-24 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Dirty I/O — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L26-L30">lines 26-30 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Future — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36">lines 32-36 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Normal — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18">lines 14-18 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png" alt="chart3" /></a></p>
@@ -393,8 +396,8 @@
 <p>Just for fun, I was curious about the latency differences between the new Dirty NIF functionality and the previous method of using a Threaded NIF or the Async NIF (or Thread Queue) by <a href="https://github.com/gburd">Gregory Burd</a>.</p>
 
 <ol>
-  <li>Thread New — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72">lines 38-72 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Thread Queue — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90">lines 74-90 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Thread New — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72">lines 38-72 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Thread Queue — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90">lines 74-90 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png" alt="chart4" /></a></p>
@@ -433,7 +436,7 @@
 
 <p>If isolation from/protection of the Erlang VM is highest priority, a C Node or Port are your best options.  If your primary concern is low latency or low complexity, using a NIF for your native function is your best option.</p>
 
-<p><em>As a side note:</em> For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new <a href="http://erlang.org/doc/man/erl_nif.html#enif_select"><code class="highlighter-rouge">enif_select</code></a>, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.</p>
+<p><em>As a side note:</em> For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new <a href="http://erlang.org/doc/man/erl_nif.html#enif_select"><code class="language-plaintext highlighter-rouge">enif_select</code></a>, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.</p>
 
 </div>
 
@@ -475,10 +478,6 @@
 
   <div id="disqus_thread"></div>
 <script>
-/**
- *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
- *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
- */
 var disqus_config = function () {
     this.page.url = 'https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir';
     this.page.identifier = 'post-2017-08-05-b55da7d7';
@@ -518,6 +517,6 @@ var disqus_config = function () {
         }, false);
       })(document);
     </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    <script id="dsq-count-scr" src="https://potatosalad.disqus.com/count.js" async></script>
   </body>
 </html>

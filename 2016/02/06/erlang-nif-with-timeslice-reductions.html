@@ -26,21 +26,24 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.6.1 -->
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
 <title>Erlang NIF with timeslice reductions | potatosalad</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Erlang NIF with timeslice reductions" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose." />
-<meta property="og:description" content="Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose." />
+<meta name="twitter:description" property="og:description" content="Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose." />
 <link rel="canonical" href="https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions" />
 <meta property="og:url" content="https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions" />
 <meta property="og:site_name" content="potatosalad" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2016-02-06T00:00:00-06:00" />
+<meta property="article:published_time" content="2016-02-06T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-02-06T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Erlang NIF with timeslice reductions" />
 <script type="application/ld+json">
-{"dateModified":"2016-02-06T00:00:00-06:00","datePublished":"2016-02-06T00:00:00-06:00","headline":"Erlang NIF with timeslice reductions","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions"},"author":{"@type":"Person","name":"Andrew Bennett"},"url":"https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions","description":"Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose.","@type":"BlogPosting","@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Andrew Bennett"},"dateModified":"2016-02-06T00:00:00+00:00","datePublished":"2016-02-06T00:00:00+00:00","description":"Recently, I put together an Erlang asynchronous port driver named keccakf1600 which implements the SHA-3 algorithms used in another one of my projects, jose.","headline":"Erlang NIF with timeslice reductions","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions"},"url":"https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -141,7 +144,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2020. All rights reserved.
+      &copy; 2026. All rights reserved.
     </p>
   </div>
 </div>
@@ -163,7 +166,7 @@
         <div class="post post-2016-02-06-ae71986a">
   <h1 class="post-title">Erlang NIF with timeslice reductions</h1>
   <span class="post-date">6 Feb, 2016</span>
-  <span class="post-comments"><a href="#disqus_thread"></a></span>
+  <span class="post-comments"><a href="/2016/02/06/erlang-nif-with-timeslice-reductions#disqus_thread">Comments</a></span>
   <hr>
   <p>Recently, I put together an Erlang asynchronous port driver named <a href="https://github.com/potatosalad/erlang-keccakf1600">keccakf1600</a> which implements the <a href="https://en.wikipedia.org/wiki/SHA-3">SHA-3</a> algorithms used in another one of my projects, <a href="https://github.com/potatosalad/erlang-jose">jose</a>.</p>
 
@@ -172,14 +175,14 @@
 <p>When interfacing with native C and the Erlang VM, you essentially have 3 options to choose from:</p>
 
 <ol>
-  <li><a href="http://erlang.org/doc/tutorial/c_portdriver.html">Port Driver</a> — a shared library linked with <a href="http://erlang.org/doc/man/driver_entry.html"><code class="highlighter-rouge">driver_entry</code></a> (I/O heavy operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/nif.html">NIF</a> — a shared library linked with <a href="http://erlang.org/doc/man/erl_nif.html"><code class="highlighter-rouge">ERL_NIF_INIT</code></a> (fast synchronous operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/c_port.html">Port</a> — an external program which typically communicates with the Erlang VM over <code class="highlighter-rouge">stdin</code> and <code class="highlighter-rouge">stdout</code></li>
+  <li><a href="http://erlang.org/doc/tutorial/c_portdriver.html">Port Driver</a> — a shared library linked with <a href="http://erlang.org/doc/man/driver_entry.html"><code class="language-plaintext highlighter-rouge">driver_entry</code></a> (I/O heavy operations are typically best suited for this type)</li>
+  <li><a href="http://erlang.org/doc/tutorial/nif.html">NIF</a> — a shared library linked with <a href="http://erlang.org/doc/man/erl_nif.html"><code class="language-plaintext highlighter-rouge">ERL_NIF_INIT</code></a> (fast synchronous operations are typically best suited for this type)</li>
+  <li><a href="http://erlang.org/doc/tutorial/c_port.html">Port</a> — an external program which typically communicates with the Erlang VM over <code class="language-plaintext highlighter-rouge">stdin</code> and <code class="language-plaintext highlighter-rouge">stdout</code></li>
 </ol>
 
-<p>My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use <a href="http://erlang.org/doc/man/erl_driver.html#driver_async%20"><code class="highlighter-rouge">driver_async</code></a> combined with <a href="http://erlang.org/doc/man/driver_entry.html#ready_async"><code class="highlighter-rouge">ready_async</code></a> to perform the blocking operations on “a thread separate from the emulator thread.”  I used the <a href="http://erlang.org/doc/man/ei.html"><code class="highlighter-rouge">ei</code></a> library in order to communicate between the Erlang VM and the port driver written in C.</p>
+<p>My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use <a href="http://erlang.org/doc/man/erl_driver.html#driver_async%20"><code class="language-plaintext highlighter-rouge">driver_async</code></a> combined with <a href="http://erlang.org/doc/man/driver_entry.html#ready_async"><code class="language-plaintext highlighter-rouge">ready_async</code></a> to perform the blocking operations on “a thread separate from the emulator thread.”  I used the <a href="http://erlang.org/doc/man/ei.html"><code class="language-plaintext highlighter-rouge">ei</code></a> library in order to communicate between the Erlang VM and the port driver written in C.</p>
 
-<p>Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang <a href="http://erlang.org/doc/man/crypto.html"><code class="highlighter-rouge">crypto</code></a> library.</p>
+<p>Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang <a href="http://erlang.org/doc/man/crypto.html"><code class="language-plaintext highlighter-rouge">crypto</code></a> library.</p>
 
 <p>The results were not terribly impressive:</p>
 
@@ -201,7 +204,7 @@
 
 <p>I highly recommend reading the two presentations from the bitwise project: <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-opt-native-code.pdf">vinoski-opt-native-code.pdf</a> and <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-schedulers.pdf">vinoski-schedulers.pdf</a>.</p>
 
-<p>After experimenting with the two options, I decided to use <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice"><code class="highlighter-rouge">enif_consume_timeslice</code></a> combined with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="highlighter-rouge">enif_schedule_nif</code></a> to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.</p>
+<p>After experimenting with the two options, I decided to use <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice"><code class="language-plaintext highlighter-rouge">enif_consume_timeslice</code></a> combined with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="language-plaintext highlighter-rouge">enif_schedule_nif</code></a> to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.</p>
 
 <p>I rewrote the port driver as a NIF and released it as version <a href="https://github.com/potatosalad/erlang-keccakf1600/tree/2.0.0">2.0.0 of keccakf1600</a> and ran the same benchmark again:</p>
 
@@ -419,10 +422,6 @@
 
   <div id="disqus_thread"></div>
 <script>
-/**
- *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
- *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
- */
 var disqus_config = function () {
     this.page.url = 'https://potatosalad.io/2016/02/06/erlang-nif-with-timeslice-reductions';
 };
@@ -461,6 +460,6 @@ var disqus_config = function () {
         }, false);
       })(document);
     </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    <script id="dsq-count-scr" src="https://potatosalad.disqus.com/count.js" async></script>
   </body>
 </html>

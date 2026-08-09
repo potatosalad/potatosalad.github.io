@@ -26,19 +26,22 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.6.1 -->
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
 <title>Home | potatosalad</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Home" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="The Development Blog of Andrew Bennett" />
-<meta property="og:description" content="The Development Blog of Andrew Bennett" />
+<meta name="twitter:description" property="og:description" content="The Development Blog of Andrew Bennett" />
 <link rel="canonical" href="https://potatosalad.io/" />
 <meta property="og:url" content="https://potatosalad.io/" />
 <meta property="og:site_name" content="potatosalad" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Home" />
 <script type="application/ld+json">
-{"headline":"Home","author":{"@type":"Person","name":"Andrew Bennett"},"url":"https://potatosalad.io/","description":"The Development Blog of Andrew Bennett","@type":"WebSite","name":"potatosalad","@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Andrew Bennett"},"description":"The Development Blog of Andrew Bennett","headline":"Home","name":"potatosalad","url":"https://potatosalad.io/"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -139,7 +142,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2020. All rights reserved.
+      &copy; 2026. All rights reserved.
     </p>
   </div>
 </div>
@@ -167,23 +170,23 @@
       </a>
     </h1>
     <span class="post-date">13 Oct, 2017</span>
-    <span class="post-comments"><a href="/2017/10/13/time-out-elixir-state-machines-versus-servers#disqus_thread"></a></span>
+    <span class="post-comments"><a href="/2017/10/13/time-out-elixir-state-machines-versus-servers#disqus_thread" data-disqus-identifier="post-2017-10-13-ad9a120f">Comments</a></span>
     <hr>
-    <p>I love <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> (and the Elixir wrapper <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a>).</p>
+    <p>I love <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> (and the Elixir wrapper <a href="https://github.com/antipax/gen_state_machine"><code class="language-plaintext highlighter-rouge">gen_state_machine</code></a>).</p>
 
-<p>Prior to the addition of <code class="highlighter-rouge">gen_statem</code> in OTP 19, the decision of when to use <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> and <a href="http://erlang.org/doc/man/gen_fsm.html"><code class="highlighter-rouge">gen_fsm</code></a> was a carefully considered one.  In the vast majority of my use cases, a simple <code class="highlighter-rouge">gen_server</code> was the easiest solution; even if it technically was behaving as a state machine.</p>
+<p>Prior to the addition of <code class="language-plaintext highlighter-rouge">gen_statem</code> in OTP 19, the decision of when to use <a href="http://erlang.org/doc/man/gen_server.html"><code class="language-plaintext highlighter-rouge">gen_server</code></a> and <a href="http://erlang.org/doc/man/gen_fsm.html"><code class="language-plaintext highlighter-rouge">gen_fsm</code></a> was a carefully considered one.  In the vast majority of my use cases, a simple <code class="language-plaintext highlighter-rouge">gen_server</code> was the easiest solution; even if it technically was behaving as a state machine.</p>
 
-<p>Initially, I thought of <code class="highlighter-rouge">gen_statem</code> only as a <code class="highlighter-rouge">gen_fsm</code> replacement and assumed I would rarely need it over using <code class="highlighter-rouge">gen_server</code>.</p>
+<p>Initially, I thought of <code class="language-plaintext highlighter-rouge">gen_statem</code> only as a <code class="language-plaintext highlighter-rouge">gen_fsm</code> replacement and assumed I would rarely need it over using <code class="language-plaintext highlighter-rouge">gen_server</code>.</p>
 
-<p>Lately, however, I find myself reaching for <code class="highlighter-rouge">gen_statem</code> to solve problems that I would have previously solved with <code class="highlighter-rouge">gen_server</code>.</p>
+<p>Lately, however, I find myself reaching for <code class="language-plaintext highlighter-rouge">gen_statem</code> to solve problems that I would have previously solved with <code class="language-plaintext highlighter-rouge">gen_server</code>.</p>
 
-<p><strong>TL;DR</strong> Try using <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> instead of <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> (especially if you plan on using <a href="http://erlang.org/doc/man/erlang.html#start_timer-3"><code class="highlighter-rouge">:erlang.start_timer/3</code></a>).  You may find it’s a better fit than you think.</p>
+<p><strong>TL;DR</strong> Try using <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> instead of <a href="http://erlang.org/doc/man/gen_server.html"><code class="language-plaintext highlighter-rouge">gen_server</code></a> (especially if you plan on using <a href="http://erlang.org/doc/man/erlang.html#start_timer-3"><code class="language-plaintext highlighter-rouge">:erlang.start_timer/3</code></a>).  You may find it’s a better fit than you think.</p>
 
 <h2 id="comparison">Comparison</h2>
 
-<p>Quick comparison between <code class="highlighter-rouge">gen_server</code> and <code class="highlighter-rouge">gen_statem</code>, using the <code class="highlighter-rouge">Stack</code> example in Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> documentation.</p>
+<p>Quick comparison between <code class="language-plaintext highlighter-rouge">gen_server</code> and <code class="language-plaintext highlighter-rouge">gen_statem</code>, using the <code class="language-plaintext highlighter-rouge">Stack</code> example in Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="language-plaintext highlighter-rouge">GenServer</code></a> documentation.</p>
 
-<p><em>Note:</em> I’m going to use the actual Erlang behaviours instead of Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> and <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">GenStateMachine</code></a> so that more details are present.</p>
+<p><em>Note:</em> I’m going to use the actual Erlang behaviours instead of Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="language-plaintext highlighter-rouge">GenServer</code></a> and <a href="https://github.com/antipax/gen_state_machine"><code class="language-plaintext highlighter-rouge">GenStateMachine</code></a> so that more details are present.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackServer</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:gen_server</span>
@@ -218,9 +221,9 @@
 <span class="c1">#=&gt; :world</span>
 </code></pre></div></div>
 
-<p>Pretty simple, right?  Let’s see how <code class="highlighter-rouge">gen_statem</code> compares.</p>
+<p>Pretty simple, right?  Let’s see how <code class="language-plaintext highlighter-rouge">gen_statem</code> compares.</p>
 
-<p><em>Note:</em> OTP’s <code class="highlighter-rouge">gen_statem</code> has 2 major modes of operation, but for the purpose of this article, only <code class="highlighter-rouge">:handle_event_function</code> will be covered.</p>
+<p><em>Note:</em> OTP’s <code class="language-plaintext highlighter-rouge">gen_statem</code> has 2 major modes of operation, but for the purpose of this article, only <code class="language-plaintext highlighter-rouge">:handle_event_function</code> will be covered.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackStateMachine</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:gen_statem</span>
@@ -259,11 +262,11 @@
 <span class="c1">#=&gt; :world</span>
 </code></pre></div></div>
 
-<p>In this example, the state is <code class="highlighter-rouge">nil</code> and is not used.</p>
+<p>In this example, the state is <code class="language-plaintext highlighter-rouge">nil</code> and is not used.</p>
 
-<p>You’ll notice that instead of a <code class="highlighter-rouge">{:reply, _, _}</code> callback tuple as used in <code class="highlighter-rouge">gen_server</code>, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.</p>
+<p>You’ll notice that instead of a <code class="language-plaintext highlighter-rouge">{:reply, _, _}</code> callback tuple as used in <code class="language-plaintext highlighter-rouge">gen_server</code>, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.</p>
 
-<p>Functionally, both examples are equivalent and some may argue that the more concise <code class="highlighter-rouge">gen_server</code> implementation is objectively better than the <code class="highlighter-rouge">gen_statem</code> version.  However, <code class="highlighter-rouge">gen_statem</code> really begins to shine, in my opinion, as more and more complexity is added to the implementation.</p>
+<p>Functionally, both examples are equivalent and some may argue that the more concise <code class="language-plaintext highlighter-rouge">gen_server</code> implementation is objectively better than the <code class="language-plaintext highlighter-rouge">gen_statem</code> version.  However, <code class="language-plaintext highlighter-rouge">gen_statem</code> really begins to shine, in my opinion, as more and more complexity is added to the implementation.</p>
 
 <p>For example:</p>
 
@@ -277,9 +280,9 @@
 
 <h2 id="time-outs-for-free">Time-Outs for Free</h2>
 
-<p>The time-out actions included in <code class="highlighter-rouge">gen_statem</code> are probably my favorite feature, but they took a while for me to understand.</p>
+<p>The time-out actions included in <code class="language-plaintext highlighter-rouge">gen_statem</code> are probably my favorite feature, but they took a while for me to understand.</p>
 
-<p>The <a href="http://erlang.org/doc/design_principles/statem.html"><code class="highlighter-rouge">gen_statem</code> documentation</a> is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.</p>
+<p>The <a href="http://erlang.org/doc/design_principles/statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code> documentation</a> is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.</p>
 
 <p>There are 3 built-in types of time-out actions…</p>
 
@@ -300,12 +303,12 @@
     <tr>
       <td>State</td>
       <td>Automatic/Manual</td>
-      <td>Reset to <code class="highlighter-rouge">:infinity</code> or state changes</td>
+      <td>Reset to <code class="language-plaintext highlighter-rouge">:infinity</code> or state changes</td>
     </tr>
     <tr>
       <td>Generic</td>
       <td>Manual</td>
-      <td>Reset to <code class="highlighter-rouge">:infinity</code></td>
+      <td>Reset to <code class="language-plaintext highlighter-rouge">:infinity</code></td>
     </tr>
   </tbody>
 </table>
@@ -336,7 +339,7 @@
 <span class="nv">@spec</span> <span class="n">handle_event</span><span class="p">({</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">},</span> <span class="ss">:any</span><span class="p">,</span> <span class="n">state</span> <span class="p">::</span> <span class="n">term</span><span class="p">(),</span> <span class="n">data</span> <span class="p">::</span> <span class="n">term</span><span class="p">())</span>
 </code></pre></div></div>
 
-<p>To “reset to <code class="highlighter-rouge">:infinity</code>” for state and generic time-outs, you would simply do…</p>
+<p>To “reset to <code class="language-plaintext highlighter-rouge">:infinity</code>” for state and generic time-outs, you would simply do…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># State Time-Out Cancellation</span>
 <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
@@ -388,7 +391,7 @@
 
 <p>State time-outs, however, survive any event that doesn’t reset them or change the state.</p>
 
-<p>For example: a connection time-out for a socket.  I might set the state to <code class="highlighter-rouge">:connecting</code> and start the connection process which consists of many individual events.  If the state is still <code class="highlighter-rouge">:connecting</code> after 5 seconds, I might want to change the state to <code class="highlighter-rouge">:disconnected</code> and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to <code class="highlighter-rouge">:connected</code>, which would cancel any existing state time-outs.</p>
+<p>For example: a connection time-out for a socket.  I might set the state to <code class="language-plaintext highlighter-rouge">:connecting</code> and start the connection process which consists of many individual events.  If the state is still <code class="language-plaintext highlighter-rouge">:connecting</code> after 5 seconds, I might want to change the state to <code class="language-plaintext highlighter-rouge">:disconnected</code> and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to <code class="language-plaintext highlighter-rouge">:connected</code>, which would cancel any existing state time-outs.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## State Time-Out: Stop after 1 second example ##</span>
 
@@ -407,7 +410,7 @@
 
 <p>There are two ways to cancel a state time-out.</p>
 
-<p>First, setting the state time-out to <code class="highlighter-rouge">:infinity</code> will cancel the time-out…</p>
+<p>First, setting the state time-out to <code class="language-plaintext highlighter-rouge">:infinity</code> will cancel the time-out…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## State Time-Out: Manual cancellation example ##</span>
 
@@ -446,13 +449,13 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>Notice that the initial state was <code class="highlighter-rouge">:unstable</code> and changing to the <code class="highlighter-rouge">:stable</code> state cancelled the state time-out.</p>
+<p>Notice that the initial state was <code class="language-plaintext highlighter-rouge">:unstable</code> and changing to the <code class="language-plaintext highlighter-rouge">:stable</code> state cancelled the state time-out.</p>
 
-<p>Any other events handled that do not change the state or reset the state time-out will result in a <code class="highlighter-rouge">:state_timeout</code> event.</p>
+<p>Any other events handled that do not change the state or reset the state time-out will result in a <code class="language-plaintext highlighter-rouge">:state_timeout</code> event.</p>
 
 <h3 id="generic-time-out">Generic Time-Out</h3>
 
-<p>Generic time-outs survive any events or state changes and must be manually reset to <code class="highlighter-rouge">:infinity</code> in order to be cancelled.</p>
+<p>Generic time-outs survive any events or state changes and must be manually reset to <code class="language-plaintext highlighter-rouge">:infinity</code> in order to be cancelled.</p>
 
 <p>For example: a request time-out, building on top of the socket connection time-out from earlier.  At the start of the request, I might set a generic time-out for 30 seconds.  I can then try multiple times to connect and reconnect until the request has actually been sent, but if it is still unsuccessful after 30 seconds, it’s time to cancel the request.</p>
 
@@ -471,7 +474,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>The only way to cancel a generic time-out is by setting it to <code class="highlighter-rouge">:infinity</code> in the same way that state time-outs may be cancelled…</p>
+<p>The only way to cancel a generic time-out is by setting it to <code class="language-plaintext highlighter-rouge">:infinity</code> in the same way that state time-outs may be cancelled…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## Generic Time-Out: Manual cancellation example ##</span>
 
@@ -493,7 +496,7 @@
 
 <h2 id="my-favorite-mode">My Favorite Mode</h2>
 
-<p>My favorite callback mode for <code class="highlighter-rouge">gen_statem</code> is actually <code class="highlighter-rouge">[:handle_event_function, :state_enter]</code>, which I would recommend for anyone who is trying to start using <code class="highlighter-rouge">gen_statem</code> for problem solving.</p>
+<p>My favorite callback mode for <code class="language-plaintext highlighter-rouge">gen_statem</code> is actually <code class="language-plaintext highlighter-rouge">[:handle_event_function, :state_enter]</code>, which I would recommend for anyone who is trying to start using <code class="language-plaintext highlighter-rouge">gen_statem</code> for problem solving.</p>
 
 <p>The main benefits of this callback mode are:</p>
 
@@ -503,26 +506,26 @@
 
     <p>Your state can technically be any term (not just an atom), which opens up some fairly complex possibilities on what can be done with your state machine.</p>
 
-    <p>For example, instead of just <code class="highlighter-rouge">:connected</code> you might have state as a tuple <code class="highlighter-rouge">{:connected, :heartbeat}</code> or <code class="highlighter-rouge">{:connected, :degraded}</code>.  You can then pattern match on the state to group together events common to the <code class="highlighter-rouge">{:connected, _}</code> state.</p>
+    <p>For example, instead of just <code class="language-plaintext highlighter-rouge">:connected</code> you might have state as a tuple <code class="language-plaintext highlighter-rouge">{:connected, :heartbeat}</code> or <code class="language-plaintext highlighter-rouge">{:connected, :degraded}</code>.  You can then pattern match on the state to group together events common to the <code class="language-plaintext highlighter-rouge">{:connected, _}</code> state.</p>
   </li>
   <li>
     <p><strong>State Enter Events</strong></p>
 
-    <p>By default, state enter events (or transition events) are not emitted by <code class="highlighter-rouge">gen_statem</code>, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.</p>
+    <p>By default, state enter events (or transition events) are not emitted by <code class="language-plaintext highlighter-rouge">gen_statem</code>, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.</p>
 
     <p>For example:</p>
 
     <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
 </code></pre></div>    </div>
 
-    <p>This means that my <code class="highlighter-rouge">init/1</code> callback function returned something like <code class="highlighter-rouge">{:ok, :disconnected, data}</code>, so <code class="highlighter-rouge">:disconnected</code> is my intial state.</p>
+    <p>This means that my <code class="language-plaintext highlighter-rouge">init/1</code> callback function returned something like <code class="language-plaintext highlighter-rouge">{:ok, :disconnected, data}</code>, so <code class="language-plaintext highlighter-rouge">:disconnected</code> is my intial state.</p>
 
-    <p>I might return a <code class="highlighter-rouge">{:state_timeout, 0, :connect}</code> to immediately attempt a connection and transition to the <code class="highlighter-rouge">:connecting</code> state.  If that fails, I might transition back to the <code class="highlighter-rouge">:disconnected</code> state, which would emit:</p>
+    <p>I might return a <code class="language-plaintext highlighter-rouge">{:state_timeout, 0, :connect}</code> to immediately attempt a connection and transition to the <code class="language-plaintext highlighter-rouge">:connecting</code> state.  If that fails, I might transition back to the <code class="language-plaintext highlighter-rouge">:disconnected</code> state, which would emit:</p>
 
     <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:connecting</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
 </code></pre></div>    </div>
 
-    <p>In this case, I might want to wait for 1 second by returning <code class="highlighter-rouge">{:state_timeout, 1000, :connect}</code> to delay reconnecting.</p>
+    <p>In this case, I might want to wait for 1 second by returning <code class="language-plaintext highlighter-rouge">{:state_timeout, 1000, :connect}</code> to delay reconnecting.</p>
 
     <p>Typically, I tend to combine these two cases into a single handler:</p>
 
@@ -541,7 +544,7 @@
 
 <p>In general, I have found the aforementioned callback mode to be the most versatile and useful to better solve otherwise complicated problems.</p>
 
-<p>Hopefully, <a href="https://hexdocs.pm/gen_state_machine/GenStateMachine.html"><code class="highlighter-rouge">GenStateMachine</code></a> will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:</p>
+<p>Hopefully, <a href="https://hexdocs.pm/gen_state_machine/GenStateMachine.html"><code class="language-plaintext highlighter-rouge">GenStateMachine</code></a> will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyStateMachine</span> <span class="k">do</span>
   <span class="kn">use</span> <span class="no">GenStateMachine</span><span class="p">,</span> <span class="ss">callback_mode:</span> <span class="p">[</span><span class="ss">:handle_event_function</span><span class="p">,</span> <span class="ss">:state_enter</span><span class="p">]</span>
@@ -550,7 +553,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>Until then, you can use the <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> behaviour directly or add <a href="https://hex.pm/packages/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a> as a dependency to your mix file.</p>
+<p>Until then, you can use the <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> behaviour directly or add <a href="https://hex.pm/packages/gen_state_machine"><code class="language-plaintext highlighter-rouge">gen_state_machine</code></a> as a dependency to your mix file.</p>
 
   </div>
   
@@ -561,7 +564,7 @@
       </a>
     </h1>
     <span class="post-date">20 Aug, 2017</span>
-    <span class="post-comments"><a href="/2017/08/20/load-testing-cowboy-2-0-0-rc-1#disqus_thread"></a></span>
+    <span class="post-comments"><a href="/2017/08/20/load-testing-cowboy-2-0-0-rc-1#disqus_thread" data-disqus-identifier="post-2017-08-20-ac796fcf">Comments</a></span>
     <hr>
     <p>Let’s load test <a href="https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1">cowboy 2.0.0-rc.1</a> and see how it compares to <a href="https://github.com/ninenines/cowboy/releases/tag/1.1.2">cowboy 1.1.2</a>!</p>
 
@@ -612,7 +615,7 @@
 
 <h3 id="cowboy-200-rc1">cowboy 2.0.0-rc.1</h3>
 
-<h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
+<h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="language-plaintext highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
@@ -634,7 +637,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
+<h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="language-plaintext highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
@@ -703,7 +706,7 @@
 
 <p>We have a 2x performance gain with an average of ~40k req/s and maximum of ~70k req/s.</p>
 
-<p><a href="https://github.com/essen">Loïc Hoguin</a>, the author of cowboy, mentioned in <a href="https://github.com/ninenines/cowboy/issues/1169">this issue</a> that using the <a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour should provide a little extra performance, so let’s test it.</p>
+<p><a href="https://github.com/essen">Loïc Hoguin</a>, the author of cowboy, mentioned in <a href="https://github.com/ninenines/cowboy/issues/1169">this issue</a> that using the <a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="language-plaintext highlighter-rouge">cowboy_stream</code></a> behaviour should provide a little extra performance, so let’s test it.</p>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" alt="cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" /></a></p>
 
@@ -760,7 +763,7 @@
       </a>
     </h1>
     <span class="post-date">5 Aug, 2017</span>
-    <span class="post-comments"><a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir#disqus_thread"></a></span>
+    <span class="post-comments"><a href="/2017/08/05/latency-of-native-functions-for-erlang-and-elixir#disqus_thread" data-disqus-identifier="post-2017-08-05-b55da7d7">Comments</a></span>
     <hr>
     <p>Erlang and C first appeared within 14 years<sup><a href="#footnote-post-2017-08-05-b55da7d7-1">*</a></sup> of one another.</p>
 
@@ -851,13 +854,13 @@
   </li>
 </ol>
 
-<p>The NIF and Port Driver implementations have a few different internal strategies for additional comparison (like Dirty NIF and <code class="highlighter-rouge">iodata()</code> based port output).</p>
+<p>The NIF and Port Driver implementations have a few different internal strategies for additional comparison (like Dirty NIF and <code class="language-plaintext highlighter-rouge">iodata()</code> based port output).</p>
 
 <p>Certain methods should have higher levels of latency based on serialization and isolation requirements.  For example, a C Node requires serialization of the entire term in order to pass it back and forth over a TCP connection.  A NIF, by comparison, requires no serialization and operates on the term itself in memory.</p>
 
 <p>Each implementation was tested with a ~64KB binary full of 1’s as the sole element of a 1-arity tuple for 100,000 iterations.  The measured elapsed time for each method were then fed into <a href="http://hdrhistogram.org/">HDR Histogram</a> for latency analysis.</p>
 
-<p>In other words, I essentially did the following on the <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency.ex"><code class="highlighter-rouge">Latency</code></a> module:</p>
+<p>In other words, I essentially did the following on the <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/lib/latency.ex"><code class="language-plaintext highlighter-rouge">Latency</code></a> module:</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">term</span> <span class="o">=</span> <span class="p">{</span><span class="ss">:binary</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="o">&lt;&lt;</span><span class="mi">1</span><span class="o">&gt;&gt;</span><span class="p">,</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">64</span><span class="p">)}</span>
 <span class="no">Latency</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)</span>
@@ -907,17 +910,17 @@
 
 <p>Port drivers, under certain circumstances, can be roughly as fast as a NIF.  This is especially true for very small terms or when the majority of the work performed is I/O or binary-based.</p>
 
-<p>The documentation for <a href="http://erlang.org/doc/man/driver_entry.html"><code class="highlighter-rouge">driver_entry</code></a> mentions that <a href="http://erlang.org/doc/man/erlang.html#port_control-3"><code class="highlighter-rouge">erlang:port_control/3</code></a> should be the fastest way to call a native function.  This seems to be true for very small terms, but larger terms cause the performance to be almost identical to <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="highlighter-rouge">erlang:port_call/3</code></a>.  Converting terms to the <a href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">External Term Format</a> and sending with <a href="http://erlang.org/doc/man/erlang.html#port_command-3"><code class="highlighter-rouge">erlang:port_command/3</code></a> (which in turn calls the <a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="highlighter-rouge">outputv</code></a> callback) actually appears to have slightly less latency.</p>
+<p>The documentation for <a href="http://erlang.org/doc/man/driver_entry.html"><code class="language-plaintext highlighter-rouge">driver_entry</code></a> mentions that <a href="http://erlang.org/doc/man/erlang.html#port_control-3"><code class="language-plaintext highlighter-rouge">erlang:port_control/3</code></a> should be the fastest way to call a native function.  This seems to be true for very small terms, but larger terms cause the performance to be almost identical to <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="language-plaintext highlighter-rouge">erlang:port_call/3</code></a>.  Converting terms to the <a href="http://erlang.org/doc/apps/erts/erl_ext_dist.html">External Term Format</a> and sending with <a href="http://erlang.org/doc/man/erlang.html#port_command-3"><code class="language-plaintext highlighter-rouge">erlang:port_command/3</code></a> (which in turn calls the <a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="language-plaintext highlighter-rouge">outputv</code></a> callback) actually appears to have slightly less latency.</p>
 
 <ol>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#call"><code class="highlighter-rouge">call</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L61-L70">lines 61-70 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#control"><code class="highlighter-rouge">control</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52">lines 41-52 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
-  <li><a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="highlighter-rouge">outputv</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59">lines 54-59 of <code class="highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#call"><code class="language-plaintext highlighter-rouge">call</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L61-L70">lines 61-70 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#control"><code class="language-plaintext highlighter-rouge">control</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L41-L52">lines 41-52 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
+  <li><a href="http://erlang.org/doc/man/driver_entry.html#outputv"><code class="language-plaintext highlighter-rouge">outputv</code></a> — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/drv/latency_drv.c#L54-L59">lines 54-59 of <code class="language-plaintext highlighter-rouge">latency_drv.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart2.png" alt="chart2" /></a></p>
 
-<p>Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="highlighter-rouge">erlang:port_call/3</code></a> allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.</p>
+<p>Also worth noting is the type of data allowed to be sent to the Port Driver.  For example, <a href="http://erlang.org/doc/man/erlang.html#port_call-3"><code class="language-plaintext highlighter-rouge">erlang:port_call/3</code></a> allows terms to be sent, but internally converts them to the external term format.  The other types are similar to C Node and Port implementations and require any terms sent to first be converted.</p>
 
 <table>
   <tr>
@@ -946,13 +949,13 @@
 
 <p><a href="http://erlang.org/doc/man/erl_nif.html">Native Implemented Function (NIF)</a> is a relatively recent addition to OTP and is the fastest way to call native functions.  However, a mis-behaving NIF can easily destabilize or crash the entire Erlang VM.</p>
 
-<p><a href="http://erlang.org/doc/man/erl_nif.html#dirty_nifs">Dirty NIF</a> and Yielding (or Future) NIF with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="highlighter-rouge">enif_schedule_nif</code></a> are even more recent additions that help prevent blocking the Erlang VM schedulers during execution or (in the case of I/O) waiting.</p>
+<p><a href="http://erlang.org/doc/man/erl_nif.html#dirty_nifs">Dirty NIF</a> and Yielding (or Future) NIF with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="language-plaintext highlighter-rouge">enif_schedule_nif</code></a> are even more recent additions that help prevent blocking the Erlang VM schedulers during execution or (in the case of I/O) waiting.</p>
 
 <ol>
-  <li>Dirty CPU — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L20-L24">lines 20-24 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Dirty I/O — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L26-L30">lines 26-30 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Future — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36">lines 32-36 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Normal — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18">lines 14-18 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Dirty CPU — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L20-L24">lines 20-24 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Dirty I/O — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L26-L30">lines 26-30 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Future — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L32-L36">lines 32-36 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Normal — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L14-L18">lines 14-18 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart3.png" alt="chart3" /></a></p>
@@ -990,8 +993,8 @@
 <p>Just for fun, I was curious about the latency differences between the new Dirty NIF functionality and the previous method of using a Threaded NIF or the Async NIF (or Thread Queue) by <a href="https://github.com/gburd">Gregory Burd</a>.</p>
 
 <ol>
-  <li>Thread New — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72">lines 38-72 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
-  <li>Thread Queue — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90">lines 74-90 of <code class="highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Thread New — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L38-L72">lines 38-72 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
+  <li>Thread Queue — <a href="https://github.com/potatosalad/elixirconf2017/blob/555763cd7505bf1ffcaa7c7099161a9e74c63a3f/apps/latency/c_src/nif/latency_nif.c#L74-L90">lines 74-90 of <code class="language-plaintext highlighter-rouge">latency_nif.c</code></a></li>
 </ol>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png"><img src="https://potatosalad.io/assets/post-2017-08-05-b55da7d7/chart4.png" alt="chart4" /></a></p>
@@ -1030,7 +1033,7 @@
 
 <p>If isolation from/protection of the Erlang VM is highest priority, a C Node or Port are your best options.  If your primary concern is low latency or low complexity, using a NIF for your native function is your best option.</p>
 
-<p><em>As a side note:</em> For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new <a href="http://erlang.org/doc/man/erl_nif.html#enif_select"><code class="highlighter-rouge">enif_select</code></a>, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.</p>
+<p><em>As a side note:</em> For very specific I/O operations, a Port Driver still may be the best option.  OTP-20 has the new <a href="http://erlang.org/doc/man/erl_nif.html#enif_select"><code class="language-plaintext highlighter-rouge">enif_select</code></a>, which is starting to transition some of those I/O benefits to the NIF world, so this may not be true statement in the near future.</p>
 
   </div>
   
@@ -1041,7 +1044,7 @@
       </a>
     </h1>
     <span class="post-date">6 Feb, 2016</span>
-    <span class="post-comments"><a href="/2016/02/06/erlang-nif-with-timeslice-reductions#disqus_thread"></a></span>
+    <span class="post-comments"><a href="/2016/02/06/erlang-nif-with-timeslice-reductions#disqus_thread">Comments</a></span>
     <hr>
     <p>Recently, I put together an Erlang asynchronous port driver named <a href="https://github.com/potatosalad/erlang-keccakf1600">keccakf1600</a> which implements the <a href="https://en.wikipedia.org/wiki/SHA-3">SHA-3</a> algorithms used in another one of my projects, <a href="https://github.com/potatosalad/erlang-jose">jose</a>.</p>
 
@@ -1050,14 +1053,14 @@
 <p>When interfacing with native C and the Erlang VM, you essentially have 3 options to choose from:</p>
 
 <ol>
-  <li><a href="http://erlang.org/doc/tutorial/c_portdriver.html">Port Driver</a> — a shared library linked with <a href="http://erlang.org/doc/man/driver_entry.html"><code class="highlighter-rouge">driver_entry</code></a> (I/O heavy operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/nif.html">NIF</a> — a shared library linked with <a href="http://erlang.org/doc/man/erl_nif.html"><code class="highlighter-rouge">ERL_NIF_INIT</code></a> (fast synchronous operations are typically best suited for this type)</li>
-  <li><a href="http://erlang.org/doc/tutorial/c_port.html">Port</a> — an external program which typically communicates with the Erlang VM over <code class="highlighter-rouge">stdin</code> and <code class="highlighter-rouge">stdout</code></li>
+  <li><a href="http://erlang.org/doc/tutorial/c_portdriver.html">Port Driver</a> — a shared library linked with <a href="http://erlang.org/doc/man/driver_entry.html"><code class="language-plaintext highlighter-rouge">driver_entry</code></a> (I/O heavy operations are typically best suited for this type)</li>
+  <li><a href="http://erlang.org/doc/tutorial/nif.html">NIF</a> — a shared library linked with <a href="http://erlang.org/doc/man/erl_nif.html"><code class="language-plaintext highlighter-rouge">ERL_NIF_INIT</code></a> (fast synchronous operations are typically best suited for this type)</li>
+  <li><a href="http://erlang.org/doc/tutorial/c_port.html">Port</a> — an external program which typically communicates with the Erlang VM over <code class="language-plaintext highlighter-rouge">stdin</code> and <code class="language-plaintext highlighter-rouge">stdout</code></li>
 </ol>
 
-<p>My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use <a href="http://erlang.org/doc/man/erl_driver.html#driver_async%20"><code class="highlighter-rouge">driver_async</code></a> combined with <a href="http://erlang.org/doc/man/driver_entry.html#ready_async"><code class="highlighter-rouge">ready_async</code></a> to perform the blocking operations on “a thread separate from the emulator thread.”  I used the <a href="http://erlang.org/doc/man/ei.html"><code class="highlighter-rouge">ei</code></a> library in order to communicate between the Erlang VM and the port driver written in C.</p>
+<p>My goal was to have a fast and asynchronous way to call blocking functions without disrupting the Erlang VM schedulers from carrying out their work.  The original plan was to use <a href="http://erlang.org/doc/man/erl_driver.html#driver_async%20"><code class="language-plaintext highlighter-rouge">driver_async</code></a> combined with <a href="http://erlang.org/doc/man/driver_entry.html#ready_async"><code class="language-plaintext highlighter-rouge">ready_async</code></a> to perform the blocking operations on “a thread separate from the emulator thread.”  I used the <a href="http://erlang.org/doc/man/ei.html"><code class="language-plaintext highlighter-rouge">ei</code></a> library in order to communicate between the Erlang VM and the port driver written in C.</p>
 
-<p>Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang <a href="http://erlang.org/doc/man/crypto.html"><code class="highlighter-rouge">crypto</code></a> library.</p>
+<p>Having accomplished my goal, I decided to run a simple benchmark against the equivalent SHA-2 algorithms out of curiosity as to how my implementation might stack up against the native Erlang <a href="http://erlang.org/doc/man/crypto.html"><code class="language-plaintext highlighter-rouge">crypto</code></a> library.</p>
 
 <p>The results were not terribly impressive:</p>
 
@@ -1079,7 +1082,7 @@
 
 <p>I highly recommend reading the two presentations from the bitwise project: <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-opt-native-code.pdf">vinoski-opt-native-code.pdf</a> and <a href="https://github.com/vinoski/bitwise/raw/master/vinoski-schedulers.pdf">vinoski-schedulers.pdf</a>.</p>
 
-<p>After experimenting with the two options, I decided to use <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice"><code class="highlighter-rouge">enif_consume_timeslice</code></a> combined with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="highlighter-rouge">enif_schedule_nif</code></a> to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.</p>
+<p>After experimenting with the two options, I decided to use <a href="http://erlang.org/doc/man/erl_nif.html#enif_consume_timeslice"><code class="language-plaintext highlighter-rouge">enif_consume_timeslice</code></a> combined with <a href="http://erlang.org/doc/man/erl_nif.html#enif_schedule_nif"><code class="language-plaintext highlighter-rouge">enif_schedule_nif</code></a> to yield control back to the main Erlang VM on larger inputs to prevent blocking other schedulers.</p>
 
 <p>I rewrote the port driver as a NIF and released it as version <a href="https://github.com/potatosalad/erlang-keccakf1600/tree/2.0.0">2.0.0 of keccakf1600</a> and ran the same benchmark again:</p>
 
@@ -1295,6 +1298,6 @@
         }, false);
       })(document);
     </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    <script id="dsq-count-scr" src="https://potatosalad.disqus.com/count.js" async></script>
   </body>
 </html>

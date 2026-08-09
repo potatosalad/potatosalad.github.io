@@ -26,21 +26,24 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.6.1 -->
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
 <title>Time-Out: Elixir State Machines versus Servers | potatosalad</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Time-Out: Elixir State Machines versus Servers" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="I love gen_statem (and the Elixir wrapper gen_state_machine)." />
-<meta property="og:description" content="I love gen_statem (and the Elixir wrapper gen_state_machine)." />
+<meta name="twitter:description" property="og:description" content="I love gen_statem (and the Elixir wrapper gen_state_machine)." />
 <link rel="canonical" href="https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers" />
 <meta property="og:url" content="https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers" />
 <meta property="og:site_name" content="potatosalad" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2017-10-13T00:00:00-05:00" />
+<meta property="article:published_time" content="2017-10-13T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-10-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Time-Out: Elixir State Machines versus Servers" />
 <script type="application/ld+json">
-{"dateModified":"2017-10-13T00:00:00-05:00","datePublished":"2017-10-13T00:00:00-05:00","headline":"Time-Out: Elixir State Machines versus Servers","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers"},"author":{"@type":"Person","name":"Andrew Bennett"},"url":"https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers","description":"I love gen_statem (and the Elixir wrapper gen_state_machine).","@type":"BlogPosting","@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Andrew Bennett"},"dateModified":"2017-10-13T00:00:00+00:00","datePublished":"2017-10-13T00:00:00+00:00","description":"I love gen_statem (and the Elixir wrapper gen_state_machine).","headline":"Time-Out: Elixir State Machines versus Servers","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers"},"url":"https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -141,7 +144,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2020. All rights reserved.
+      &copy; 2026. All rights reserved.
     </p>
   </div>
 </div>
@@ -163,23 +166,23 @@
         <div class="post post-2017-10-13-ad9a120f">
   <h1 class="post-title">Time-Out: Elixir State Machines versus Servers</h1>
   <span class="post-date">13 Oct, 2017</span>
-  <span class="post-comments"><a href="#disqus_thread"></a></span>
+  <span class="post-comments"><a href="/2017/10/13/time-out-elixir-state-machines-versus-servers#disqus_thread" data-disqus-identifier="post-2017-10-13-ad9a120f">Comments</a></span>
   <hr>
-  <p>I love <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> (and the Elixir wrapper <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a>).</p>
+  <p>I love <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> (and the Elixir wrapper <a href="https://github.com/antipax/gen_state_machine"><code class="language-plaintext highlighter-rouge">gen_state_machine</code></a>).</p>
 
-<p>Prior to the addition of <code class="highlighter-rouge">gen_statem</code> in OTP 19, the decision of when to use <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> and <a href="http://erlang.org/doc/man/gen_fsm.html"><code class="highlighter-rouge">gen_fsm</code></a> was a carefully considered one.  In the vast majority of my use cases, a simple <code class="highlighter-rouge">gen_server</code> was the easiest solution; even if it technically was behaving as a state machine.</p>
+<p>Prior to the addition of <code class="language-plaintext highlighter-rouge">gen_statem</code> in OTP 19, the decision of when to use <a href="http://erlang.org/doc/man/gen_server.html"><code class="language-plaintext highlighter-rouge">gen_server</code></a> and <a href="http://erlang.org/doc/man/gen_fsm.html"><code class="language-plaintext highlighter-rouge">gen_fsm</code></a> was a carefully considered one.  In the vast majority of my use cases, a simple <code class="language-plaintext highlighter-rouge">gen_server</code> was the easiest solution; even if it technically was behaving as a state machine.</p>
 
-<p>Initially, I thought of <code class="highlighter-rouge">gen_statem</code> only as a <code class="highlighter-rouge">gen_fsm</code> replacement and assumed I would rarely need it over using <code class="highlighter-rouge">gen_server</code>.</p>
+<p>Initially, I thought of <code class="language-plaintext highlighter-rouge">gen_statem</code> only as a <code class="language-plaintext highlighter-rouge">gen_fsm</code> replacement and assumed I would rarely need it over using <code class="language-plaintext highlighter-rouge">gen_server</code>.</p>
 
-<p>Lately, however, I find myself reaching for <code class="highlighter-rouge">gen_statem</code> to solve problems that I would have previously solved with <code class="highlighter-rouge">gen_server</code>.</p>
+<p>Lately, however, I find myself reaching for <code class="language-plaintext highlighter-rouge">gen_statem</code> to solve problems that I would have previously solved with <code class="language-plaintext highlighter-rouge">gen_server</code>.</p>
 
-<p><strong>TL;DR</strong> Try using <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> instead of <a href="http://erlang.org/doc/man/gen_server.html"><code class="highlighter-rouge">gen_server</code></a> (especially if you plan on using <a href="http://erlang.org/doc/man/erlang.html#start_timer-3"><code class="highlighter-rouge">:erlang.start_timer/3</code></a>).  You may find it’s a better fit than you think.</p>
+<p><strong>TL;DR</strong> Try using <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> instead of <a href="http://erlang.org/doc/man/gen_server.html"><code class="language-plaintext highlighter-rouge">gen_server</code></a> (especially if you plan on using <a href="http://erlang.org/doc/man/erlang.html#start_timer-3"><code class="language-plaintext highlighter-rouge">:erlang.start_timer/3</code></a>).  You may find it’s a better fit than you think.</p>
 
 <h2 id="comparison">Comparison</h2>
 
-<p>Quick comparison between <code class="highlighter-rouge">gen_server</code> and <code class="highlighter-rouge">gen_statem</code>, using the <code class="highlighter-rouge">Stack</code> example in Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> documentation.</p>
+<p>Quick comparison between <code class="language-plaintext highlighter-rouge">gen_server</code> and <code class="language-plaintext highlighter-rouge">gen_statem</code>, using the <code class="language-plaintext highlighter-rouge">Stack</code> example in Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="language-plaintext highlighter-rouge">GenServer</code></a> documentation.</p>
 
-<p><em>Note:</em> I’m going to use the actual Erlang behaviours instead of Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="highlighter-rouge">GenServer</code></a> and <a href="https://github.com/antipax/gen_state_machine"><code class="highlighter-rouge">GenStateMachine</code></a> so that more details are present.</p>
+<p><em>Note:</em> I’m going to use the actual Erlang behaviours instead of Elixir’s <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="language-plaintext highlighter-rouge">GenServer</code></a> and <a href="https://github.com/antipax/gen_state_machine"><code class="language-plaintext highlighter-rouge">GenStateMachine</code></a> so that more details are present.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackServer</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:gen_server</span>
@@ -214,9 +217,9 @@
 <span class="c1">#=&gt; :world</span>
 </code></pre></div></div>
 
-<p>Pretty simple, right?  Let’s see how <code class="highlighter-rouge">gen_statem</code> compares.</p>
+<p>Pretty simple, right?  Let’s see how <code class="language-plaintext highlighter-rouge">gen_statem</code> compares.</p>
 
-<p><em>Note:</em> OTP’s <code class="highlighter-rouge">gen_statem</code> has 2 major modes of operation, but for the purpose of this article, only <code class="highlighter-rouge">:handle_event_function</code> will be covered.</p>
+<p><em>Note:</em> OTP’s <code class="language-plaintext highlighter-rouge">gen_statem</code> has 2 major modes of operation, but for the purpose of this article, only <code class="language-plaintext highlighter-rouge">:handle_event_function</code> will be covered.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">StackStateMachine</span> <span class="k">do</span>
   <span class="nv">@behaviour</span> <span class="ss">:gen_statem</span>
@@ -255,11 +258,11 @@
 <span class="c1">#=&gt; :world</span>
 </code></pre></div></div>
 
-<p>In this example, the state is <code class="highlighter-rouge">nil</code> and is not used.</p>
+<p>In this example, the state is <code class="language-plaintext highlighter-rouge">nil</code> and is not used.</p>
 
-<p>You’ll notice that instead of a <code class="highlighter-rouge">{:reply, _, _}</code> callback tuple as used in <code class="highlighter-rouge">gen_server</code>, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.</p>
+<p>You’ll notice that instead of a <code class="language-plaintext highlighter-rouge">{:reply, _, _}</code> callback tuple as used in <code class="language-plaintext highlighter-rouge">gen_server</code>, replies are sent by passing “actions” as the last element of the state callback tuple.  Replies (one or more) can be sent at any time and not necessarily as a synchronous operation resulting from a call event.</p>
 
-<p>Functionally, both examples are equivalent and some may argue that the more concise <code class="highlighter-rouge">gen_server</code> implementation is objectively better than the <code class="highlighter-rouge">gen_statem</code> version.  However, <code class="highlighter-rouge">gen_statem</code> really begins to shine, in my opinion, as more and more complexity is added to the implementation.</p>
+<p>Functionally, both examples are equivalent and some may argue that the more concise <code class="language-plaintext highlighter-rouge">gen_server</code> implementation is objectively better than the <code class="language-plaintext highlighter-rouge">gen_statem</code> version.  However, <code class="language-plaintext highlighter-rouge">gen_statem</code> really begins to shine, in my opinion, as more and more complexity is added to the implementation.</p>
 
 <p>For example:</p>
 
@@ -273,9 +276,9 @@
 
 <h2 id="time-outs-for-free">Time-Outs for Free</h2>
 
-<p>The time-out actions included in <code class="highlighter-rouge">gen_statem</code> are probably my favorite feature, but they took a while for me to understand.</p>
+<p>The time-out actions included in <code class="language-plaintext highlighter-rouge">gen_statem</code> are probably my favorite feature, but they took a while for me to understand.</p>
 
-<p>The <a href="http://erlang.org/doc/design_principles/statem.html"><code class="highlighter-rouge">gen_statem</code> documentation</a> is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.</p>
+<p>The <a href="http://erlang.org/doc/design_principles/statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code> documentation</a> is excellent, but fairly information-dense and can be difficult to initially digest for some (myself included).  It took several reads for me to understand just how powerful time-out actions could be.</p>
 
 <p>There are 3 built-in types of time-out actions…</p>
 
@@ -296,12 +299,12 @@
     <tr>
       <td>State</td>
       <td>Automatic/Manual</td>
-      <td>Reset to <code class="highlighter-rouge">:infinity</code> or state changes</td>
+      <td>Reset to <code class="language-plaintext highlighter-rouge">:infinity</code> or state changes</td>
     </tr>
     <tr>
       <td>Generic</td>
       <td>Manual</td>
-      <td>Reset to <code class="highlighter-rouge">:infinity</code></td>
+      <td>Reset to <code class="language-plaintext highlighter-rouge">:infinity</code></td>
     </tr>
   </tbody>
 </table>
@@ -332,7 +335,7 @@
 <span class="nv">@spec</span> <span class="n">handle_event</span><span class="p">({</span><span class="ss">:timeout</span><span class="p">,</span> <span class="ss">:any</span><span class="p">},</span> <span class="ss">:any</span><span class="p">,</span> <span class="n">state</span> <span class="p">::</span> <span class="n">term</span><span class="p">(),</span> <span class="n">data</span> <span class="p">::</span> <span class="n">term</span><span class="p">())</span>
 </code></pre></div></div>
 
-<p>To “reset to <code class="highlighter-rouge">:infinity</code>” for state and generic time-outs, you would simply do…</p>
+<p>To “reset to <code class="language-plaintext highlighter-rouge">:infinity</code>” for state and generic time-outs, you would simply do…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># State Time-Out Cancellation</span>
 <span class="n">actions</span> <span class="o">=</span> <span class="p">[{</span><span class="ss">:state_timeout</span><span class="p">,</span> <span class="ss">:infinity</span><span class="p">,</span> <span class="no">nil</span><span class="p">}]</span>
@@ -384,7 +387,7 @@
 
 <p>State time-outs, however, survive any event that doesn’t reset them or change the state.</p>
 
-<p>For example: a connection time-out for a socket.  I might set the state to <code class="highlighter-rouge">:connecting</code> and start the connection process which consists of many individual events.  If the state is still <code class="highlighter-rouge">:connecting</code> after 5 seconds, I might want to change the state to <code class="highlighter-rouge">:disconnected</code> and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to <code class="highlighter-rouge">:connected</code>, which would cancel any existing state time-outs.</p>
+<p>For example: a connection time-out for a socket.  I might set the state to <code class="language-plaintext highlighter-rouge">:connecting</code> and start the connection process which consists of many individual events.  If the state is still <code class="language-plaintext highlighter-rouge">:connecting</code> after 5 seconds, I might want to change the state to <code class="language-plaintext highlighter-rouge">:disconnected</code> and retry the connection process after waiting for a few seconds with another state time-out.  If it’s successful, I could change the state to <code class="language-plaintext highlighter-rouge">:connected</code>, which would cancel any existing state time-outs.</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## State Time-Out: Stop after 1 second example ##</span>
 
@@ -403,7 +406,7 @@
 
 <p>There are two ways to cancel a state time-out.</p>
 
-<p>First, setting the state time-out to <code class="highlighter-rouge">:infinity</code> will cancel the time-out…</p>
+<p>First, setting the state time-out to <code class="language-plaintext highlighter-rouge">:infinity</code> will cancel the time-out…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## State Time-Out: Manual cancellation example ##</span>
 
@@ -442,13 +445,13 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>Notice that the initial state was <code class="highlighter-rouge">:unstable</code> and changing to the <code class="highlighter-rouge">:stable</code> state cancelled the state time-out.</p>
+<p>Notice that the initial state was <code class="language-plaintext highlighter-rouge">:unstable</code> and changing to the <code class="language-plaintext highlighter-rouge">:stable</code> state cancelled the state time-out.</p>
 
-<p>Any other events handled that do not change the state or reset the state time-out will result in a <code class="highlighter-rouge">:state_timeout</code> event.</p>
+<p>Any other events handled that do not change the state or reset the state time-out will result in a <code class="language-plaintext highlighter-rouge">:state_timeout</code> event.</p>
 
 <h3 id="generic-time-out">Generic Time-Out</h3>
 
-<p>Generic time-outs survive any events or state changes and must be manually reset to <code class="highlighter-rouge">:infinity</code> in order to be cancelled.</p>
+<p>Generic time-outs survive any events or state changes and must be manually reset to <code class="language-plaintext highlighter-rouge">:infinity</code> in order to be cancelled.</p>
 
 <p>For example: a request time-out, building on top of the socket connection time-out from earlier.  At the start of the request, I might set a generic time-out for 30 seconds.  I can then try multiple times to connect and reconnect until the request has actually been sent, but if it is still unsuccessful after 30 seconds, it’s time to cancel the request.</p>
 
@@ -467,7 +470,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>The only way to cancel a generic time-out is by setting it to <code class="highlighter-rouge">:infinity</code> in the same way that state time-outs may be cancelled…</p>
+<p>The only way to cancel a generic time-out is by setting it to <code class="language-plaintext highlighter-rouge">:infinity</code> in the same way that state time-outs may be cancelled…</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">## Generic Time-Out: Manual cancellation example ##</span>
 
@@ -489,7 +492,7 @@
 
 <h2 id="my-favorite-mode">My Favorite Mode</h2>
 
-<p>My favorite callback mode for <code class="highlighter-rouge">gen_statem</code> is actually <code class="highlighter-rouge">[:handle_event_function, :state_enter]</code>, which I would recommend for anyone who is trying to start using <code class="highlighter-rouge">gen_statem</code> for problem solving.</p>
+<p>My favorite callback mode for <code class="language-plaintext highlighter-rouge">gen_statem</code> is actually <code class="language-plaintext highlighter-rouge">[:handle_event_function, :state_enter]</code>, which I would recommend for anyone who is trying to start using <code class="language-plaintext highlighter-rouge">gen_statem</code> for problem solving.</p>
 
 <p>The main benefits of this callback mode are:</p>
 
@@ -499,26 +502,26 @@
 
     <p>Your state can technically be any term (not just an atom), which opens up some fairly complex possibilities on what can be done with your state machine.</p>
 
-    <p>For example, instead of just <code class="highlighter-rouge">:connected</code> you might have state as a tuple <code class="highlighter-rouge">{:connected, :heartbeat}</code> or <code class="highlighter-rouge">{:connected, :degraded}</code>.  You can then pattern match on the state to group together events common to the <code class="highlighter-rouge">{:connected, _}</code> state.</p>
+    <p>For example, instead of just <code class="language-plaintext highlighter-rouge">:connected</code> you might have state as a tuple <code class="language-plaintext highlighter-rouge">{:connected, :heartbeat}</code> or <code class="language-plaintext highlighter-rouge">{:connected, :degraded}</code>.  You can then pattern match on the state to group together events common to the <code class="language-plaintext highlighter-rouge">{:connected, _}</code> state.</p>
   </li>
   <li>
     <p><strong>State Enter Events</strong></p>
 
-    <p>By default, state enter events (or transition events) are not emitted by <code class="highlighter-rouge">gen_statem</code>, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.</p>
+    <p>By default, state enter events (or transition events) are not emitted by <code class="language-plaintext highlighter-rouge">gen_statem</code>, but I have found that they can be very useful to help reduce code complexity.  This is especially noticeable with state time-outs that need to be started immediately after changing state.</p>
 
     <p>For example:</p>
 
     <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
 </code></pre></div>    </div>
 
-    <p>This means that my <code class="highlighter-rouge">init/1</code> callback function returned something like <code class="highlighter-rouge">{:ok, :disconnected, data}</code>, so <code class="highlighter-rouge">:disconnected</code> is my intial state.</p>
+    <p>This means that my <code class="language-plaintext highlighter-rouge">init/1</code> callback function returned something like <code class="language-plaintext highlighter-rouge">{:ok, :disconnected, data}</code>, so <code class="language-plaintext highlighter-rouge">:disconnected</code> is my intial state.</p>
 
-    <p>I might return a <code class="highlighter-rouge">{:state_timeout, 0, :connect}</code> to immediately attempt a connection and transition to the <code class="highlighter-rouge">:connecting</code> state.  If that fails, I might transition back to the <code class="highlighter-rouge">:disconnected</code> state, which would emit:</p>
+    <p>I might return a <code class="language-plaintext highlighter-rouge">{:state_timeout, 0, :connect}</code> to immediately attempt a connection and transition to the <code class="language-plaintext highlighter-rouge">:connecting</code> state.  If that fails, I might transition back to the <code class="language-plaintext highlighter-rouge">:disconnected</code> state, which would emit:</p>
 
     <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">handle_event</span><span class="p">(</span><span class="ss">:enter</span><span class="p">,</span> <span class="ss">:connecting</span><span class="p">,</span> <span class="ss">:disconnected</span><span class="p">,</span> <span class="n">_data</span><span class="p">)</span>
 </code></pre></div>    </div>
 
-    <p>In this case, I might want to wait for 1 second by returning <code class="highlighter-rouge">{:state_timeout, 1000, :connect}</code> to delay reconnecting.</p>
+    <p>In this case, I might want to wait for 1 second by returning <code class="language-plaintext highlighter-rouge">{:state_timeout, 1000, :connect}</code> to delay reconnecting.</p>
 
     <p>Typically, I tend to combine these two cases into a single handler:</p>
 
@@ -537,7 +540,7 @@
 
 <p>In general, I have found the aforementioned callback mode to be the most versatile and useful to better solve otherwise complicated problems.</p>
 
-<p>Hopefully, <a href="https://hexdocs.pm/gen_state_machine/GenStateMachine.html"><code class="highlighter-rouge">GenStateMachine</code></a> will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:</p>
+<p>Hopefully, <a href="https://hexdocs.pm/gen_state_machine/GenStateMachine.html"><code class="language-plaintext highlighter-rouge">GenStateMachine</code></a> will one day be part of Elixir core and you’ll be able to write the following without any external dependencies:</p>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">defmodule</span> <span class="no">MyStateMachine</span> <span class="k">do</span>
   <span class="kn">use</span> <span class="no">GenStateMachine</span><span class="p">,</span> <span class="ss">callback_mode:</span> <span class="p">[</span><span class="ss">:handle_event_function</span><span class="p">,</span> <span class="ss">:state_enter</span><span class="p">]</span>
@@ -546,7 +549,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<p>Until then, you can use the <a href="http://erlang.org/doc/man/gen_statem.html"><code class="highlighter-rouge">gen_statem</code></a> behaviour directly or add <a href="https://hex.pm/packages/gen_state_machine"><code class="highlighter-rouge">gen_state_machine</code></a> as a dependency to your mix file.</p>
+<p>Until then, you can use the <a href="http://erlang.org/doc/man/gen_statem.html"><code class="language-plaintext highlighter-rouge">gen_statem</code></a> behaviour directly or add <a href="https://hex.pm/packages/gen_state_machine"><code class="language-plaintext highlighter-rouge">gen_state_machine</code></a> as a dependency to your mix file.</p>
 
 </div>
 
@@ -588,10 +591,6 @@
 
   <div id="disqus_thread"></div>
 <script>
-/**
- *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
- *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
- */
 var disqus_config = function () {
     this.page.url = 'https://potatosalad.io/2017/10/13/time-out-elixir-state-machines-versus-servers';
     this.page.identifier = 'post-2017-10-13-ad9a120f';
@@ -631,6 +630,6 @@ var disqus_config = function () {
         }, false);
       })(document);
     </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    <script id="dsq-count-scr" src="https://potatosalad.disqus.com/count.js" async></script>
   </body>
 </html>

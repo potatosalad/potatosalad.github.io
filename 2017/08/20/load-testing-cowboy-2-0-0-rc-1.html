@@ -26,21 +26,24 @@
   <!-- RSS -->
   <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
 
-  <!-- Begin Jekyll SEO tag v2.6.1 -->
+  <!-- Begin Jekyll SEO tag v2.9.0 -->
 <title>Load Testing cowboy 2.0.0-rc.1 | potatosalad</title>
-<meta name="generator" content="Jekyll v4.0.0" />
+<meta name="generator" content="Jekyll v4.4.1" />
 <meta property="og:title" content="Load Testing cowboy 2.0.0-rc.1" />
 <meta name="author" content="Andrew Bennett" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!" />
-<meta property="og:description" content="Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!" />
+<meta name="twitter:description" property="og:description" content="Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!" />
 <link rel="canonical" href="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1" />
 <meta property="og:url" content="https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1" />
 <meta property="og:site_name" content="potatosalad" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2017-08-20T00:00:00-05:00" />
+<meta property="article:published_time" content="2017-08-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-08-20T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Load Testing cowboy 2.0.0-rc.1" />
 <script type="application/ld+json">
-{"dateModified":"2017-08-20T00:00:00-05:00","datePublished":"2017-08-20T00:00:00-05:00","headline":"Load Testing cowboy 2.0.0-rc.1","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"},"author":{"@type":"Person","name":"Andrew Bennett"},"url":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1","description":"Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!","@type":"BlogPosting","@context":"https://schema.org"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Andrew Bennett"},"dateModified":"2017-08-20T00:00:00+00:00","datePublished":"2017-08-20T00:00:00+00:00","description":"Let’s load test cowboy 2.0.0-rc.1 and see how it compares to cowboy 1.1.2!","headline":"Load Testing cowboy 2.0.0-rc.1","mainEntityOfPage":{"@type":"WebPage","@id":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"},"url":"https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1"}</script>
 <!-- End Jekyll SEO tag -->
 
 
@@ -141,7 +144,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2020. All rights reserved.
+      &copy; 2026. All rights reserved.
     </p>
   </div>
 </div>
@@ -163,7 +166,7 @@
         <div class="post post-2017-08-20-ac796fcf">
   <h1 class="post-title">Load Testing cowboy 2.0.0-rc.1</h1>
   <span class="post-date">20 Aug, 2017</span>
-  <span class="post-comments"><a href="#disqus_thread"></a></span>
+  <span class="post-comments"><a href="/2017/08/20/load-testing-cowboy-2-0-0-rc-1#disqus_thread" data-disqus-identifier="post-2017-08-20-ac796fcf">Comments</a></span>
   <hr>
   <p>Let’s load test <a href="https://github.com/ninenines/cowboy/releases/tag/2.0.0-rc.1">cowboy 2.0.0-rc.1</a> and see how it compares to <a href="https://github.com/ninenines/cowboy/releases/tag/1.1.2">cowboy 1.1.2</a>!</p>
 
@@ -214,7 +217,7 @@
 
 <h3 id="cowboy-200-rc1">cowboy 2.0.0-rc.1</h3>
 
-<h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
+<h5 id="cowboy_handler-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_handler/"><code class="language-plaintext highlighter-rouge">cowboy_handler</code></a> behaviour</h5>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
@@ -236,7 +239,7 @@
 <span class="k">end</span>
 </code></pre></div></div>
 
-<h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
+<h5 id="cowboy_stream-behaviour"><a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="language-plaintext highlighter-rouge">cowboy_stream</code></a> behaviour</h5>
 
 <div class="language-elixir highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="ss">:cowboy</span><span class="o">.</span><span class="n">start_clear</span><span class="p">(</span><span class="no">Contention</span><span class="o">.</span><span class="no">Handler</span><span class="o">.</span><span class="no">HTTP</span><span class="p">,</span> <span class="p">[</span> <span class="ss">port:</span> <span class="mi">29593</span> <span class="p">],</span> <span class="p">%{</span>
   <span class="ss">env:</span> <span class="p">%{</span>
@@ -305,7 +308,7 @@
 
 <p>We have a 2x performance gain with an average of ~40k req/s and maximum of ~70k req/s.</p>
 
-<p><a href="https://github.com/essen">Loïc Hoguin</a>, the author of cowboy, mentioned in <a href="https://github.com/ninenines/cowboy/issues/1169">this issue</a> that using the <a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="highlighter-rouge">cowboy_stream</code></a> behaviour should provide a little extra performance, so let’s test it.</p>
+<p><a href="https://github.com/essen">Loïc Hoguin</a>, the author of cowboy, mentioned in <a href="https://github.com/ninenines/cowboy/issues/1169">this issue</a> that using the <a href="https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy_stream/"><code class="language-plaintext highlighter-rouge">cowboy_stream</code></a> behaviour should provide a little extra performance, so let’s test it.</p>
 
 <p><a href="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg"><img src="https://potatosalad.io/assets/post-2017-08-20-ac796fcf/cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" alt="cowboy-1.1.2-vs-cowboy-2.0.0-rc.1.b.svg" /></a></p>
 
@@ -393,10 +396,6 @@
 
   <div id="disqus_thread"></div>
 <script>
-/**
- *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
- *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
- */
 var disqus_config = function () {
     this.page.url = 'https://potatosalad.io/2017/08/20/load-testing-cowboy-2-0-0-rc-1';
     this.page.identifier = 'post-2017-08-20-ac796fcf';
@@ -436,6 +435,6 @@ var disqus_config = function () {
         }, false);
       })(document);
     </script>
-    <script id="dsq-count-scr" src="//potatosalad.disqus.com/count.js" async></script>
+    <script id="dsq-count-scr" src="https://potatosalad.disqus.com/count.js" async></script>
   </body>
 </html>
