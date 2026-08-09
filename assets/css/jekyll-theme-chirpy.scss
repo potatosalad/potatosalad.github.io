@@ -45,7 +45,7 @@ $sidebar-desktop-breakpoint: 1200px;
 
   #sidebar-trigger,
   #search-trigger {
-    display: block;
+    display: block !important;
   }
 }
 
