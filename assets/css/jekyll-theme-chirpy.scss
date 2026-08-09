@@ -20,6 +20,16 @@ $sidebar-expanded-width: 260px;
 $sidebar-expanded-width-large: 300px;
 
 @media all and (min-width: 850px) {
+  #sidebar,
+  #sidebar *,
+  #sidebar-trigger,
+  #sidebar-trigger *,
+  #main-wrapper,
+  #topbar-wrapper {
+    transition: none !important;
+    animation: none !important;
+  }
+
   #sidebar {
     width: $sidebar-rail-width;
     overflow-x: hidden;
@@ -54,6 +64,13 @@ $sidebar-expanded-width-large: 300px;
     margin: 0;
     border-radius: 0;
     background: var(--sidebar-bg);
+    text-decoration: none !important;
+
+    &:hover,
+    &:focus,
+    &:active {
+      text-decoration: none !important;
+    }
   }
 
   #sidebar-trigger i::before {

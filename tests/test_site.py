@@ -150,6 +150,8 @@ def test_theme_responsive_content_colors() -> None:
     require("content: '\\f137'" in stylesheet, "expanded sidebar must use Font Awesome's collapse icon")
     require("content: '\\f042'" in stylesheet, "collapsed rail must visibly retain the theme switcher")
     require("transition: width" not in stylesheet, "sidebar width must not animate and make controls jump")
+    require("transition: none !important" in stylesheet, "all sidebar controls must switch position without animation")
+    require("text-decoration: none !important" in stylesheet, "sidebar toggle icon must not inherit link underlining")
     require('data-bs-theme="dark"' in stylesheet, "custom CSS must define dark-theme adaptations")
     require("contrast(0.82)" in stylesheet, "dark charts must retain visible gridline contrast")
     for css_class in ("metric-good", "metric-caution", "metric-bad"):
