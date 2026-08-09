@@ -18,10 +18,10 @@
 $sidebar-rail-width: 4.5rem;
 $sidebar-expanded-width: 260px;
 $sidebar-expanded-width-large: 300px;
-$sidebar-desktop-breakpoint: 1200px;
+$sidebar-desktop-breakpoint: 850px;
 
-/* Chirpy exposes its permanent sidebar at 850px. Keep the drawer through
-   tablet widths so the rail cannot consume a mobile-sized content area. */
+/* Keep the collapsed rail through Chirpy's permanent-sidebar range. The
+   standard drawer and hamburger take over together below 850px. */
 @media all and (max-width: calc($sidebar-desktop-breakpoint - 1px)) {
   #sidebar {
     width: $sidebar-expanded-width;
