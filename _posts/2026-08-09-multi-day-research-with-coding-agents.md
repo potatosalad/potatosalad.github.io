@@ -3,7 +3,7 @@ layout: post
 title: Multi-Day Research with Coding Agents
 categories: [AI Engineering]
 tags: [AI Agents, Research Automation]
-comments: false
+hash: post-2026-08-09-984fdfd3
 ---
 
 Some research tasks take coding agents hours or days.  A single session tends to collect too much context and may declare victory too early.

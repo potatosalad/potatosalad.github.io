@@ -73,6 +73,39 @@ def test_post_categories() -> None:
         require(f"categories: [{category}]" in post, f"missing curated category for {filename}")
 
 
+def test_post_disqus_metadata() -> None:
+    hashes: dict[str, str] = {}
+    for path in sorted((ROOT / "_posts").glob("*.md")):
+        post = path.read_text()
+        require(post.startswith("---\n"), f"published post is missing YAML front matter: {path.name}")
+        front_matter = post.split("---", 2)[1]
+
+        comment_values = re.findall(
+            r'^\s*(?:"comments"|\'comments\'|comments)\s*:\s*([^#\n]*)',
+            front_matter,
+            re.MULTILINE,
+        )
+        require(len(comment_values) <= 1, f"published post has duplicate comments keys: {path.name}")
+        require(
+            not comment_values or comment_values[0].strip().lower() in {"true", "yes", "on"},
+            f"published post disables comments: {path.name}",
+        )
+
+        hash_values = re.findall(
+            r'^\s*(?:"hash"|\'hash\'|hash)\s*:\s*([^#\n]*)',
+            front_matter,
+            re.MULTILINE,
+        )
+        require(len(hash_values) == 1, f"published post must have exactly one Disqus hash: {path.name}")
+        post_hash = hash_values[0].strip()
+        require(
+            re.fullmatch(r"post-\d{4}-\d{2}-\d{2}-[0-9a-f]{8}", post_hash) is not None,
+            f"published post has an invalid Disqus hash: {path.name}",
+        )
+        require(post_hash not in hashes, f"duplicate Disqus hash in {path.name} and {hashes.get(post_hash)}")
+        hashes[post_hash] = path.name
+
+
 def test_post_topbar_home_link() -> None:
     topbar = ROOT / "_includes/topbar.html"
     require(topbar.is_file(), "post top bar must be locally customized")
@@ -321,6 +354,7 @@ def main() -> int:
         test_chirpy_starter_structure,
         test_agent_instructions,
         test_post_categories,
+        test_post_disqus_metadata,
         test_post_topbar_home_link,
         test_disqus_identifier_override,
         test_disqus_comment_counts,
