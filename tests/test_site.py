@@ -81,7 +81,7 @@ def test_post_disqus_metadata() -> None:
         front_matter = post.split("---", 2)[1]
 
         comment_values = re.findall(
-            r'^\s*(?:"comments"|\'comments\'|comments)\s*:\s*([^#\n]*)',
+            r'^(?:"comments"|\'comments\'|comments)\s*:\s*([^#\n]*)',
             front_matter,
             re.MULTILINE,
         )
@@ -92,7 +92,7 @@ def test_post_disqus_metadata() -> None:
         )
 
         hash_values = re.findall(
-            r'^\s*(?:"hash"|\'hash\'|hash)\s*:\s*([^#\n]*)',
+            r'^(?:"hash"|\'hash\'|hash)\s*:\s*([^#\n]*)',
             front_matter,
             re.MULTILINE,
         )
