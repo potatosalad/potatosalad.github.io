@@ -77,8 +77,10 @@ def test_post_disqus_metadata() -> None:
     hashes: dict[str, str] = {}
     for path in sorted((ROOT / "_posts").glob("*.md")):
         post = path.read_text()
-        require(post.startswith("---\n"), f"published post is missing YAML front matter: {path.name}")
-        front_matter = post.split("---", 2)[1]
+        front_matter_match = re.match(r"\A---\n(.*?)\n---(?:\n|\Z)", post, re.DOTALL)
+        if front_matter_match is None:
+            raise AssertionError(f"published post has malformed YAML front matter: {path.name}")
+        front_matter = front_matter_match.group(1)
 
         comment_values = re.findall(
             r'^(?:"comments"|\'comments\'|comments)\s*:\s*([^#\n]*)',
@@ -99,8 +101,8 @@ def test_post_disqus_metadata() -> None:
         require(len(hash_values) == 1, f"published post must have exactly one Disqus hash: {path.name}")
         post_hash = hash_values[0].strip()
         require(
-            re.fullmatch(r"post-\d{4}-\d{2}-\d{2}-[0-9a-f]{8}", post_hash) is not None,
-            f"published post has an invalid Disqus hash: {path.name}",
+            re.fullmatch(rf"post-{re.escape(path.name[:10])}-[0-9a-f]{{8}}", post_hash) is not None,
+            f"published post has an invalid or mismatched Disqus hash: {path.name}",
         )
         require(post_hash not in hashes, f"duplicate Disqus hash in {path.name} and {hashes.get(post_hash)}")
         hashes[post_hash] = path.name
