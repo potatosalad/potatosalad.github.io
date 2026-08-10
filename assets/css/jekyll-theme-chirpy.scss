@@ -217,6 +217,29 @@ $sidebar-desktop-breakpoint: 850px;
   }
 }
 
+/* Chirpy does not ship Bootstrap's position utility classes. Keep the Disqus
+   count inside the card and make it read like the rest of the card metadata. */
+#post-list .comment-count {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  color: var(--text-muted-color);
+
+  a {
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+  }
+}
+
+@media all and (min-width: 768px) {
+  #post-list .comment-count {
+    right: 1.75rem;
+    bottom: 1.25rem;
+  }
+}
+
 /* Static charts were exported for a white canvas. Filtering the composited
    image preserves their hues while making labels and axes readable in dark mode. */
 .theme-responsive-chart {

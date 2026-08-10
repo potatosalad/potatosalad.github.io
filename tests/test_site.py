@@ -118,10 +118,20 @@ def test_disqus_comment_counts() -> None:
     home = (ROOT / "_layouts/home.html").read_text()
     post = (ROOT / "_layouts/post.html").read_text()
     require("include disqus-count-link.html post=post" in home, "home cards must show comment counts")
-    require("comment-count position-absolute" in home, "home comment counts must be right-aligned")
+    require('class="comment-count post-meta"' in home, "home comment counts must match card metadata typography")
     require("include disqus-count-link.html post=page" in post, "post header must show its comment count")
     require("include disqus-count-script.html" in home, "home must load count script")
     require("include disqus-count-script.html" in post, "posts must load count script")
+
+    stylesheet = (ROOT / "assets/css/jekyll-theme-chirpy.scss").read_text()
+    require(".comment-count {" in stylesheet, "home comment counts must have explicit custom styling")
+    require("position: absolute" in stylesheet, "home comment counts must be positioned inside their card")
+    require("bottom: 1.25rem" in stylesheet, "home comment counts must align with the card metadata baseline")
+    require("right: 1.75rem" in stylesheet, "home comment counts must align with the card's right padding")
+    require("color: var(--text-muted-color)" in stylesheet, "home comment counts must use metadata text color")
+    require("font: inherit" in stylesheet, "home comment links must use metadata typography")
+    require("color: inherit" in stylesheet, "home comment links must not use the default blue link color")
+    require("text-decoration: none" in stylesheet, "home comment links must not use default link decoration")
 
 
 def test_static_chart_dependencies() -> None:
