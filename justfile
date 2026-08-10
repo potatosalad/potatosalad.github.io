@@ -18,9 +18,9 @@ build: image
     {{ engine }} run --rm --network=none --env JEKYLL_ENV=production --volume "$PWD:/site" --workdir /site {{ image }} bundle exec jekyll build --trace
     {{ engine }} run --rm --network=none --volume "$PWD:/site" --workdir /site {{ image }} python3 tests/test_site.py --built
 
-# Serve the site with live reload at http://localhost:4000.
+# Serve the site, including drafts, with live reload at http://localhost:4000.
 dev: image
-    {{ engine }} run --rm --interactive --tty {{ network }} {{ ports }} --volume "$PWD:/site" --workdir /site {{ image }} bundle exec jekyll serve --host 0.0.0.0 --livereload --force_polling
+    {{ engine }} run --rm --interactive --tty {{ network }} {{ ports }} --volume "$PWD:/site" --workdir /site {{ image }} bundle exec jekyll serve --host 0.0.0.0 --livereload --force_polling --drafts
 
 # Run the Node-based Starry Night regression checks in the project image.
 test-starry-night: image
