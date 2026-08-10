@@ -130,10 +130,6 @@ layout: default
           <!-- .card-body -->
         </div>
       </a>
-      <div class="comment-count post-meta">
-        <i class="far fa-comments fa-fw me-1"></i>
-        {% include disqus-count-link.html post=post %}
-      </div>
     </article>
   {% endfor %}
 </div>
@@ -142,5 +138,3 @@ layout: default
 {% if paginator.total_pages > 1 %}
   {% include post-paginator.html %}
 {% endif %}
-
-{% include disqus-count-script.html %}

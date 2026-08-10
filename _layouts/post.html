@@ -35,10 +35,6 @@ script_includes:
         </span>
       {% endif %}
 
-      <span class="comment-count">
-        <i class="far fa-comments fa-fw me-1"></i>
-        {% include disqus-count-link.html post=page %}
-      </span>
 
       {% if page.image %}
         {% capture src %}src="{{ page.image.path | default: page.image }}"{% endcapture %}
@@ -184,5 +180,3 @@ script_includes:
   </div>
   <!-- div.post-tail-wrapper -->
 </article>
-
-{% include disqus-count-script.html %}

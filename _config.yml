@@ -8,10 +8,9 @@ title: potatosalad.io
 tagline: ""
 description: The development blog of Andrew Bennett
 url: "https://potatosalad.io"
-canonical_url: "https://potatosalad.io"
 baseurl: ""
 
-# Preserve the historical URLs used by links and Disqus.
+# Preserve the historical URLs used by links and giscus pathname mapping.
 permalink: /:year/:month/:day/:title
 
 github:
@@ -67,22 +66,22 @@ actions:
     static_url: false
 
 comments:
-  provider: disqus
+  provider: giscus
   disqus:
-    shortname: potatosalad
+    shortname:
   utterances:
     repo:
     issue_term:
   giscus:
-    repo:
-    repo_id:
-    category:
-    category_id:
-    mapping:
-    strict:
-    input_position:
-    lang:
-    reactions_enabled:
+    repo: potatosalad/potatosalad.github.io
+    repo_id: MDEwOlJlcG9zaXRvcnk0MzE1ODMxNg==
+    category: Comments
+    category_id: DIC_kwDOApKLLM4DDFM6
+    mapping: pathname
+    strict: 1
+    input_position: top
+    lang: en
+    reactions_enabled: 1
 
 assets:
   self_host:

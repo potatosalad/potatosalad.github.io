@@ -2,6 +2,7 @@
 """Regression checks for the Chirpy-based Jekyll site."""
 
 from pathlib import Path
+import json
 import re
 import shutil
 import struct
@@ -10,9 +11,16 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 POST_PATH = "/2017/10/13/time-out-elixir-state-machines-versus-servers"
-POST_ID = "post-2017-10-13-ad9a120f"
 LEGACY_PATH = "/2016/02/06/erlang-nif-with-timeslice-reductions"
-LEGACY_ID = "post-2016-02-06-ae71986a"
+GISCUS_REPO_ID = "MDEwOlJlcG9zaXRvcnk0MzE1ODMxNg=="
+GISCUS_CATEGORY_ID = "DIC_kwDOApKLLM4DDFM6"
+HISTORICAL_DISQUS_HASHES = {
+    "2016-02-06-erlang-nif-with-timeslice-reductions.md": "post-2016-02-06-ae71986a",
+    "2017-08-05-latency-of-native-functions-for-erlang-and-elixir.md": "post-2017-08-05-b55da7d7",
+    "2017-08-20-load-testing-cowboy-2-0-0-rc-1.md": "post-2017-08-20-ac796fcf",
+    "2017-10-13-time-out-elixir-state-machines-versus-servers.md": "post-2017-10-13-ad9a120f",
+    "2026-08-09-multi-day-research-with-coding-agents.md": "post-2026-08-09-984fdfd3",
+}
 
 
 def require(condition: bool, message: str) -> None:
@@ -30,13 +38,17 @@ def test_chirpy_configuration() -> None:
     require("syntax_highlighter_opts:" not in config, "Rouge highlighting options must be removed")
     require("title: potatosalad.io" in config, "sidebar title must read potatosalad.io")
     require('tagline: ""' in config, "sidebar must not display the old blog tagline")
-    require(
-        'canonical_url: "https://potatosalad.io"' in config,
-        "Disqus must retain the production canonical URL during local development",
-    )
+    require('canonical_url: "https://potatosalad.io"' not in config, "obsolete Disqus canonical URL must be removed")
     require("permalink: /:year/:month/:day/:title" in config, "historical post URLs must be preserved")
-    require("provider: disqus" in config, "Chirpy comments must use Disqus")
-    require("shortname: potatosalad" in config, "the existing Disqus site must be retained")
+    require("provider: giscus" in config, "Chirpy comments must use giscus")
+    require("repo: potatosalad/potatosalad.github.io" in config, "giscus must use the site repository")
+    require(f"repo_id: {GISCUS_REPO_ID}" in config, "giscus repository ID must remain stable")
+    require("category: Comments" in config, "giscus must use the Comments category")
+    require(f"category_id: {GISCUS_CATEGORY_ID}" in config, "giscus category ID must remain stable")
+    require("mapping: pathname" in config, "giscus must map posts by their stable pathnames")
+    require("strict: 1" in config, "giscus must use strict discussion matching")
+    require("input_position: top" in config, "giscus comment input must appear above comments")
+    require("reactions_enabled: 1" in config, "giscus reactions must remain enabled")
     require(
         "avatar: /public/apple-touch-icon-precomposed.png" in config,
         "sidebar must use the existing potatosalad logo",
@@ -73,7 +85,7 @@ def test_post_categories() -> None:
         require(f"categories: [{category}]" in post, f"missing curated category for {filename}")
 
 
-def test_post_disqus_metadata() -> None:
+def test_post_comment_metadata() -> None:
     hashes: dict[str, str] = {}
     for path in sorted((ROOT / "_posts").glob("*.md")):
         post = path.read_text()
@@ -98,14 +110,19 @@ def test_post_disqus_metadata() -> None:
             front_matter,
             re.MULTILINE,
         )
-        require(len(hash_values) == 1, f"published post must have exactly one Disqus hash: {path.name}")
+        require(len(hash_values) <= 1, f"published post has duplicate historical Disqus hashes: {path.name}")
+        if not hash_values:
+            continue
         post_hash = hash_values[0].strip()
         require(
             re.fullmatch(rf"post-{re.escape(path.name[:10])}-[0-9a-f]{{8}}", post_hash) is not None,
-            f"published post has an invalid or mismatched Disqus hash: {path.name}",
+            f"published post has an invalid or mismatched historical Disqus hash: {path.name}",
         )
-        require(post_hash not in hashes, f"duplicate Disqus hash in {path.name} and {hashes.get(post_hash)}")
+        require(post_hash not in hashes, f"duplicate historical Disqus hash in {path.name} and {hashes.get(post_hash)}")
         hashes[post_hash] = path.name
+
+    expected = {post_hash: filename for filename, post_hash in HISTORICAL_DISQUS_HASHES.items()}
+    require(hashes == expected, "historical Disqus hashes must be retained as migration records")
 
 
 def test_post_topbar_home_link() -> None:
@@ -119,54 +136,44 @@ def test_post_topbar_home_link() -> None:
     )
 
 
-def test_disqus_identifier_override() -> None:
-    include = ROOT / "_includes/comments/disqus.html"
-    require(include.is_file(), "Chirpy Disqus include must be overridden for historical threads")
-    text = include.read_text()
-    require(
-        "this.page.url = '{{ site.canonical_url }}{{ page.url }}';" in text,
-        "Disqus must use the production URL even on the dev server",
-    )
-    require("this.page.identifier = '{{ page.hash }}';" in text, "Disqus must use historical post hashes")
-    require(LEGACY_ID in text, "legacy URL-identified thread exception must be preserved")
-    require(
-        "unless page.hash == 'post-2016-02-06-ae71986a'" in text,
-        "legacy URL-keyed thread must omit an explicit identifier",
-    )
-    require(
-        "this.page.identifier = '{{ page.url }}';" not in text,
-        "legacy thread must not be moved to a path-string identifier",
-    )
+def test_giscus_comments() -> None:
+    config = (ROOT / "_config.yml").read_text()
+    for value in (
+        "provider: giscus",
+        "repo: potatosalad/potatosalad.github.io",
+        f"repo_id: {GISCUS_REPO_ID}",
+        "category: Comments",
+        f"category_id: {GISCUS_CATEGORY_ID}",
+        "mapping: pathname",
+        "strict: 1",
+        "input_position: top",
+        "reactions_enabled: 1",
+        "lang: en",
+    ):
+        require(value in config, f"missing giscus configuration: {value}")
 
-
-def test_disqus_comment_counts() -> None:
-    count_link = ROOT / "_includes/disqus-count-link.html"
-    count_script = ROOT / "_includes/disqus-count-script.html"
-    require(count_link.is_file(), "reusable Disqus count link must exist")
-    link_text = count_link.read_text()
-    require("data-disqus-identifier" in link_text, "normal posts must count by historical identifier")
-    require(LEGACY_ID in link_text, "legacy URL-keyed count exception must be preserved")
-    require("site.canonical_url" in link_text, "legacy count must use its production URL")
-    require(count_script.is_file(), "Disqus count loader must exist")
-    require("potatosalad.disqus.com/count.js" in count_script.read_text(), "Disqus count script must load")
+    require(not (ROOT / "_includes/comments/disqus.html").exists(), "custom Disqus embed must be removed")
+    require(not (ROOT / "_includes/disqus-count-link.html").exists(), "Disqus count links must be removed")
+    require(not (ROOT / "_includes/disqus-count-script.html").exists(), "Disqus count loader must be removed")
 
     home = (ROOT / "_layouts/home.html").read_text()
     post = (ROOT / "_layouts/post.html").read_text()
-    require("include disqus-count-link.html post=post" in home, "home cards must show comment counts")
-    require('class="comment-count post-meta"' in home, "home comment counts must match card metadata typography")
-    require("include disqus-count-link.html post=page" in post, "post header must show its comment count")
-    require("include disqus-count-script.html" in home, "home must load count script")
-    require("include disqus-count-script.html" in post, "posts must load count script")
-
     stylesheet = (ROOT / "assets/css/jekyll-theme-chirpy.scss").read_text()
-    require(".comment-count {" in stylesheet, "home comment counts must have explicit custom styling")
-    require("position: absolute" in stylesheet, "home comment counts must be positioned inside their card")
-    require("bottom: 1.25rem" in stylesheet, "home comment counts must align with the card metadata baseline")
-    require("right: 1.75rem" in stylesheet, "home comment counts must align with the card's right padding")
-    require("color: var(--text-muted-color)" in stylesheet, "home comment counts must use metadata text color")
-    require("font: inherit" in stylesheet, "home comment links must use metadata typography")
-    require("color: inherit" in stylesheet, "home comment links must not use the default blue link color")
-    require("text-decoration: none" in stylesheet, "home comment links must not use default link decoration")
+    for name, text in (("home layout", home), ("post layout", post), ("custom stylesheet", stylesheet)):
+        require("disqus" not in text.lower(), f"{name} must not retain Disqus integration")
+        require("comment-count" not in text, f"{name} must not retain obsolete comment-count UI")
+
+    restrictions = json.loads((ROOT / "giscus.json").read_text())
+    require(
+        restrictions.get("origins")
+        == [
+            "https://potatosalad.io",
+            "https://potatosalad.github.io",
+            "http://127.0.0.1:4000",
+            "http://localhost:4000",
+        ],
+        "giscus origins must be restricted to production and local preview hosts",
+    )
 
 
 def test_static_chart_dependencies() -> None:
@@ -290,18 +297,25 @@ def test_generated_chirpy_site() -> None:
     require('class="pl-' in html, "generated fenced code must contain Starry Night token classes")
     stylesheet = (ROOT / "_site/assets/css/jekyll-theme-chirpy.css").read_text()
     require(".pl-c" in stylesheet, "generated CSS must include the Starry Night theme")
-    require(
-        f"this.page.identifier = '{POST_ID}';" in html,
-        "generated Disqus embed must use the historical thread identifier",
-    )
-    require("https://potatosalad.disqus.com/embed.js" in html, "production build must include Disqus")
+    for value in (
+        "src: 'https://giscus.app/client.js'",
+        "'data-repo': 'potatosalad/potatosalad.github.io'",
+        f"'data-repo-id': '{GISCUS_REPO_ID}'",
+        "'data-category': 'Comments'",
+        f"'data-category-id': '{GISCUS_CATEGORY_ID}'",
+        "'data-mapping': 'pathname'",
+        "'data-strict' : '1'",
+        "'data-reactions-enabled': '1'",
+        "'data-emit-metadata': '0'",
+        "'data-input-position': 'top'",
+        "let lang = 'en'",
+        "'data-loading': 'lazy'",
+    ):
+        require(value in html, f"generated giscus embed missing {value}")
+    require("disqus.com" not in html, "production build must not include Disqus")
     require(
         '<div id="topbar-title"><a href="/">potatosalad.io</a></div>' in html,
         "generated post top bar must link potatosalad.io to home",
-    )
-    require(
-        f'data-disqus-identifier="{POST_ID}"' in html,
-        "generated post header must count comments by historical identifier",
     )
 
     home = (ROOT / "_site/index.html").read_text()
@@ -326,25 +340,19 @@ def test_generated_chirpy_site() -> None:
         f'href="{POST_PATH}/"' in home or f'href="{POST_PATH}"' in home,
         "home page must retain the historical post URL",
     )
-    require(
-        f'data-disqus-identifier="{POST_ID}"' in home,
-        "home card must count comments by historical identifier",
-    )
+    require("disqus.com" not in home, "home page must not load Disqus")
+    require("comment-count" not in home, "home cards must not render obsolete comment counts")
+    require("giscus.app/client.js" not in home, "home page must not load per-post giscus embeds")
 
     legacy = generated_post(LEGACY_PATH).read_text()
-    legacy_config = legacy.split("var disqus_config", 1)[1].split("};", 1)[0]
-    require(
-        f"this.page.url = 'https://potatosalad.io{LEGACY_PATH}';" in legacy_config,
-        "legacy discussion must look up its production canonical URL",
-    )
-    require(
-        "this.page.identifier" not in legacy_config,
-        "legacy discussion must remain URL-keyed by omitting the identifier",
-    )
-    require(
-        f'href="https://potatosalad.io{LEGACY_PATH}#disqus_thread"' in legacy,
-        "legacy comment count must look up the production URL",
-    )
+    for value in (
+        "src: 'https://giscus.app/client.js'",
+        "'data-mapping': 'pathname'",
+        "'data-strict' : '1'",
+        f"'data-category-id': '{GISCUS_CATEGORY_ID}'",
+    ):
+        require(value in legacy, f"legacy post giscus embed missing {value}")
+    require("disqus.com" not in legacy, "legacy post must not load Disqus")
 
     require((ROOT / "_site/public/cv.html").is_file(), "existing CV page must remain published")
     require((ROOT / "_site/assets/post-2017-08-05-b55da7d7/chart1.png").is_file(), "post assets must remain published")
@@ -356,10 +364,9 @@ def main() -> int:
         test_chirpy_starter_structure,
         test_agent_instructions,
         test_post_categories,
-        test_post_disqus_metadata,
+        test_post_comment_metadata,
         test_post_topbar_home_link,
-        test_disqus_identifier_override,
-        test_disqus_comment_counts,
+        test_giscus_comments,
         test_static_chart_dependencies,
         test_theme_responsive_content_colors,
         test_theme_owns_404_page,

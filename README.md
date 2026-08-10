@@ -39,9 +39,15 @@ just deploy         # build and publish the generated site to master
 
 The recipe mounts the host's `~/.ssh` and `~/.gitconfig` read-only so the container can authenticate, and mounts `~/.gnupg` so GnuPG can access its agent and sign the deployment commit. Run `just deploy-dry-run` before publishing substantial changes.
 
-## Disqus
+## Comments
 
-Posts retain their historical `hash` front-matter values as stable Disqus
-identifiers. The Chirpy Disqus include is overridden so existing discussions
-continue to load instead of creating replacement threads. The 2016 NIF post
-keeps its original URL-based identifier as a compatibility exception.
+Comments use Chirpy's native [giscus](https://giscus.app/) integration and map
+each permanent post pathname to a Discussion in this repository's `Comments`
+category. `giscus.json` restricts embeds to the production domains and local
+preview origins. The four comments from the previous Disqus installation were
+imported into the two corresponding GitHub Discussions with explicit attribution
+to their original authors and timestamps, while preserving the text, reply
+relationship, and historical reaction count.
+
+Existing post `hash` values remain in front matter as Disqus migration records;
+new posts do not require one.
